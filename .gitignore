@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+
+# Environments
+.env
+.env.production
+.venv/
+
+# Build output
+dist/
+build/
+*.local
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+coverage/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+zed/
+
+# Agent tooling (local)
+.agents/
+.claude/
+.scratch/
+.opencode/
+openspec/
+.sisyphus/
+.zed/
+CLAUDE.local.md
+
+# Local scratch
+*.log
+dump.rdb
+stdout
+frontend/.prettierrc
+
+# Uploaded user media (served from disk, not source)
+/media
+
+# Per-app deploy scripts (contain server-specific targets)
+frontend/deploy.sh
+frontend/deploy-vue.sh
+frontend/deploy-react.sh
+
+# Design exploration
+design-demos/
+
+# Audit artifacts
+books-audit-report.md

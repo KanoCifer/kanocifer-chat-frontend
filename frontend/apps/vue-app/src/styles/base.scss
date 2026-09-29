@@ -1,0 +1,102 @@
+/**
+ * 通用基础样式 —— 由 sass 编译。
+ * Tailwind v4 指令（@import 'tailwindcss' / @plugin / @theme）放在 base.css，
+ * 由 @tailwindcss/vite 处理；这里只放 font-face 与普通样式规则。
+ */
+@use '@readinglist/brand/prose';
+@use '@readinglist/brand/prose-magazine';
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: medium;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: bold;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: '阿里妈妈方圆体 VF Regular';
+  src:
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/JzWMyKA8U06c.woff2')
+      format('woff2'),
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/qFzBtDuQpN4i.woff')
+      format('woff');
+  font-variation-settings:
+    'BEVL' 80,
+    'wght' 500;
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Averia Gruesa Libre';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/AveriaGruesaLibre-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: '阿里妈妈东方大楷 Regular';
+  font-weight: 400;
+  src:
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/bs5CgKu7Hdck.woff2')
+      format('woff2'),
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/FS1e5LRmIZGQ.woff')
+      format('woff');
+  font-variation-settings: normal;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-font-smoothing: antialiased; /* macOS */
+  -moz-osx-font-smoothing: grayscale; /* macOS Firefox */
+  text-rendering: optimizeLegibility; /* 渲染优化 */
+}
+
+:root {
+  -webkit-overflow-scrolling: touch;
+  margin: 0;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+.nav-glass-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+:root[data-font='harmonyos'] {
+  --default-font-family:
+    'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-sans: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}

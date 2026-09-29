@@ -1,0 +1,68 @@
+import { createHead } from '@vueuse/head';
+import { createPinia, setActivePinia } from 'pinia';
+import { createApp } from 'vue';
+import { createI18n } from 'vue-i18n';
+import App from './App.vue';
+import { isColorScheme } from '@readinglist/utils';
+import { messages } from '@readinglist/brand/locales';
+import './styles/base.css'; // Tailwind v4 入口
+import './styles/backgrounds.css'; // 背景渐变
+import './styles/base.scss'; // font-face sass
+import './styles/route-transitions.css'; // 路由过渡动画 keyframes
+import './styles/squircle.css';
+import './styles/icon-crossfade.css';
+// echarts 是模块顶层 use([...]) 注册副作用,必须在首次 echarts.init() 前执行;
+// 这里 eager import 确保注册在 entry chunk 里执行(其他路由 chunk 不再重复触发)。
+// 注意:此处新增 ~700KB echarts 体积在 entry chunk,可接受的代价是注册副作用集中。
+import './lib/echarts';
+import './lib/dayjs';
+import { initVisitorWebSocket } from './lib';
+import router from './router';
+
+// Apply persisted color scheme before mount to avoid flash of wrong colors
+if (typeof document !== 'undefined') {
+  const saved = localStorage.getItem('color-scheme');
+  const scheme = isColorScheme(saved) ? saved : 'paper';
+  if (!isColorScheme(saved)) {
+    localStorage.setItem('color-scheme', scheme);
+  }
+  document.documentElement.setAttribute('data-color-scheme', scheme);
+}
+
+const app = createApp(App);
+const pinia = createPinia();
+const head = createHead();
+
+/**
+ * Pick the i18n locale from `navigator.language`.
+ * - Anything starting with `zh` → 'zh-CN' (Simplified Chinese as the closest match
+ *   for the only Chinese variant currently shipped in @readinglist/brand/locales).
+ * - Everything else → 'en' (fallback).
+ * SSR-safe: defaults to 'en' when `navigator` is unavailable.
+ */
+function detectLocale(): 'zh-CN' | 'en' {
+  if (typeof navigator === 'undefined') return 'en';
+  const lang = (navigator.language || '').toLowerCase();
+  if (lang.startsWith('zh')) return 'zh-CN';
+  return 'en';
+}
+
+const i18n = createI18n({
+  legacy: false,
+  locale: detectLocale(),
+  fallbackLocale: 'en',
+  messages,
+});
+
+setActivePinia(pinia);
+
+app.use(pinia);
+app.use(router);
+app.use(head);
+app.use(i18n);
+
+if (typeof window !== 'undefined') {
+  initVisitorWebSocket(pinia);
+}
+
+app.mount('#app');

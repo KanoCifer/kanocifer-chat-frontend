@@ -1,0 +1,20 @@
+{
+  "extends": "../../packages/config/src/tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2023",
+    "useDefineForClassFields": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client", "@types/amap-js-api"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@readinglist/types": ["../../packages/types/src/index.ts"],
+      "@readinglist/utils": ["../../packages/utils/src/index.ts"],
+      "@readinglist/api": ["../../packages/api/src/index.ts"],
+      "@readinglist/config/*": ["../../packages/config/src/*"],
+    },
+  },
+  "include": ["src"],
+}

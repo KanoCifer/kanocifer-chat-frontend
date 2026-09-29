@@ -1,0 +1,24 @@
+{
+  "name": "@readinglist/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "跨前端共享的 API 请求层（apiClient、拦截器、gateway）",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@readinglist/types": "workspace:*",
+    "@readinglist/utils": "workspace:*",
+    "@simplewebauthn/browser": "^13.3.0",
+    "axios": "^1.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  }
+}

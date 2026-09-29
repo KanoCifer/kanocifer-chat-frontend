@@ -1,0 +1,127 @@
+.squircle {
+  border-radius: 28px;
+  overflow: clip;
+
+  /* 超椭圆特性 */
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+  }
+}
+
+/* Bento card: 平整纸感基底 — 阴影已内联到组件，无 CSS 状态。
+   按压反馈由 framer-motion whileTap 处理。 */
+
+/* ── Hero 动态渐变背景 ── 仅 background-position 动画（合成器友好） ── */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-decorative-from),
+    var(--gradient-primary-from),
+    var(--gradient-decorative-to)
+  );
+  background-size: 200% 200%;
+  animation: hero-gradient-shift 14s ease infinite;
+}
+
+@keyframes hero-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ── 滚动提示弹跳 ── 仅 translateY ── */
+.scroll-hint {
+  animation: scroll-hint-bounce 2s ease-in-out infinite;
+}
+
+@keyframes scroll-hint-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+/* ── Liquid Glass 材质（Hero + 展开浮层唯一批准用法） ──
+   从 Vue BasicNav.vue .liquid-glass 移植，squircle 变体覆写圆角。 */
+
+.liquid-glass {
+  background: rgb(255 255 255 / 0.06);
+  -webkit-backdrop-filter: url(#nav-liquid-glass) blur(7px) saturate(1.4);
+  backdrop-filter: url(#nav-liquid-glass) blur(4px) saturate(1.4);
+  border: 1px solid rgb(21 20 15 / 0.08);
+  box-shadow:
+    inset 0 0 2px 1px rgb(255 255 255 / 0.55),
+    inset 0 0 10px 4px rgb(255 255 255 / 0.22),
+    0 6px 24px rgb(17 17 26 / 0.06),
+    0 12px 40px rgb(17 17 26 / 0.05);
+}
+
+/* squircle 变体 — Hero 卡片保持签名形状 */
+.liquid-glass-card {
+  border-radius: 48px;
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+  }
+  background: rgb(255 255 255 / 0.06);
+  -webkit-backdrop-filter: url(#nav-liquid-glass) blur(7px) saturate(1.4);
+  backdrop-filter: url(#nav-liquid-glass) blur(4px) saturate(1.4);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow:
+    inset 0 0 2px 1px rgb(255 255 255 / 0.55),
+    inset 0 0 10px 4px rgb(255 255 255 / 0.22),
+    0 6px 24px rgb(17 17 26 / 0.06),
+    0 12px 40px rgb(17 17 26 / 0.05);
+}
+
+/* Safari 回退 — 无 url() backdrop-filter 支持时降级为纯模糊 */
+@supports not (backdrop-filter: url(#nav-liquid-glass)) {
+  .liquid-glass,
+  .liquid-glass-card {
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+  }
+}
+
+/* 暗色模式 */
+.dark .liquid-glass {
+  background-color: color-mix(in srgb, var(--color-page) 40%, transparent);
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 0 2px 1px rgb(255 255 255 / 0.1),
+    inset 0 0 10px 4px rgb(255 255 255 / 0.04),
+    0 0 24px -4px rgb(255 255 255 / 0.12),
+    0 0 8px -2px rgb(255 255 255 / 0.08);
+}
+
+.dark .liquid-glass-card {
+  background-color: color-mix(in srgb, var(--color-page) 40%, transparent);
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 0 2px 1px rgb(255 255 255 / 0.1),
+    inset 0 0 10px 4px rgb(255 255 255 / 0.04),
+    0 0 24px -4px rgb(255 255 255 / 0.12),
+    0 0 8px -2px rgb(255 255 255 / 0.08);
+}
+
+/* ── Reduced Motion 降级 ── */
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient,
+  .scroll-hint {
+    animation: none !important;
+  }
+}

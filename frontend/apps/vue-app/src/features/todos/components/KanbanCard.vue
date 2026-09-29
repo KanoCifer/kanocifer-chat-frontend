@@ -1,0 +1,266 @@
+<template>
+  <article
+    class="bg-card/30 group border-border contain-intrinsic-size-[auto_180px] block w-full rounded-3xl border p-3 text-left [content-visibility:auto]"
+    :class="[
+      isDragging ? 'cursor-grabbing opacity-50' : 'cursor-grab',
+      done ? 'opacity-70' : '',
+    ]"
+    draggable="true"
+    @dragstart="onDragStart"
+    @dragend="onDragEnd"
+  >
+    <div class="grid grid-cols-[auto_1fr] items-start gap-3">
+      <!-- LEFT: animal guardian. No ring, no halo — same C-ring style as FrontierCard. -->
+      <div class="relative shrink-0 pt-0.5">
+        <img
+          :src="cardMeta.animalSrc"
+          :alt="''"
+          class="animal-avatar h-[80px] w-[80px] object-cover select-none"
+          draggable="false"
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+        />
+      </div>
+
+      <!-- RIGHT: title + chips + (optional desc) + footer -->
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <!-- title row: 6-dot grip (visual drag cue) + clickable title -->
+        <button
+          type="button"
+          class="focus-visible:ring-ring flex w-full items-start gap-1.5 rounded-md text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          @click="$emit('open', task.slug)"
+        >
+          <svg
+            class="text-muted/50 group-hover:text-muted mt-0.5 h-3.5 w-3.5 shrink-0 transition-colors"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 6h2M8 12h2M8 18h2M14 6h2M14 12h2M14 18h2"
+            />
+          </svg>
+          <!-- 拖动仅作指针用户的视觉提示；键盘用户通过"移动到"菜单操作 -->
+          <span
+            class="text-ink line-clamp-2 flex-1 text-sm leading-snug"
+            :class="done ? 'text-muted line-through' : 'font-medium'"
+            >{{ task.title }}</span
+          >
+        </button>
+
+        <!-- chips: type / priority / kind / slug (English labels via the shared chip components) -->
+        <div class="flex flex-wrap items-center gap-1">
+          <SlugBadge :slug="task.slug" />
+          <StatusChip :type="task.type" />
+          <PriorityBadge :priority="task.priority" />
+          <KindBadge v-if="task.kind" :kind="task.kind" />
+        </div>
+
+        <p
+          v-if="task.description"
+          class="text-muted line-clamp-2 text-xs leading-relaxed"
+        >
+          {{ task.description }}
+        </p>
+
+        <!-- footer: avatar + due_date (left) · actions (right, hover-revealed) -->
+        <div class="mt-1 flex items-center justify-between gap-2">
+          <div
+            class="text-muted flex items-center gap-1.5 font-mono text-[11px] tabular-nums"
+          >
+            <span
+              v-if="task.due_date"
+              class="flex items-center gap-1"
+              :class="cardMeta.isOverdue && !done ? 'text-destructive' : ''"
+            >
+              <svg
+                class="h-[11px] w-[11px] shrink-0"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="2" y="3" width="12" height="11" rx="1.5" />
+                <path d="M2 6.5h12" />
+                <path d="M5.5 1.5v3M10.5 1.5v3" />
+              </svg>
+              <span>{{ cardMeta.dueText }}</span>
+            </span>
+          </div>
+
+          <!-- actions (reveal on hover) -->
+          <div class="fc-actions flex items-center gap-1">
+            <button
+              v-if="!done"
+              type="button"
+              class="text-muted hover:bg-surface hover:text-ink border-border bg-surface grid h-6 w-6 place-items-center rounded-full border transition-colors"
+              title="推进状态"
+              aria-label="推进状态"
+              @click.stop="$emit('cycle', task.slug)"
+            >
+              <svg
+                class="h-[11px] w-[11px]"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 8h10" />
+                <path d="M9.5 4.5L13 8l-3.5 3.5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="text-muted hover:text-destructive border-border bg-surface grid h-6 w-6 place-items-center rounded-full border transition-colors"
+              title="删除"
+              aria-label="删除"
+              @click.stop="$emit('delete', task.slug)"
+            >
+              <svg
+                class="h-[11px] w-[11px]"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 4.5h10" />
+                <path d="M6.5 4.5V3.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1" />
+                <path
+                  d="M4.5 4.5l.7 8a1 1 0 0 0 1 .9h3.6a1 1 0 0 0 1-.9l.7-8"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import type { DevTask } from '@/features/todos/api';
+import StatusChip from './StatusChip.vue';
+import PriorityBadge from './PriorityBadge.vue';
+import KindBadge from './KindBadge.vue';
+import SlugBadge from './SlugBadge.vue';
+
+const props = withDefaults(
+  defineProps<{
+    task: DevTask;
+    isDragging?: boolean;
+  }>(),
+  {
+    isDragging: false,
+  },
+);
+
+const emit = defineEmits<{
+  open: [slug: string];
+  cycle: [slug: string];
+  delete: [slug: string];
+  dragstart: [slug: string];
+  dragend: [];
+}>();
+
+const done = computed(() => props.task.status === '已完成');
+
+/**
+ * 卡片展示所需的全部日期派生 —— 一次算完并缓存。
+ *
+ * 原先 pickAnimal / formatDue / overdue 各自 new 了两个 Date 再 setHours，
+ * 而 `overdue()` 还是模板里的方法调用，每次卡片重渲染都会重新分配一遍。
+ * 看板列里 ~200 张卡同时在场，父列 drag 状态一变就是几百次纯垃圾分配。
+ * 现在合成单个 computed：依赖只有 props.task，任务本身不变就不重算。
+ *
+ * 口径与原实现逐字对齐（含"今天到期算 penguin、不算 overdue"这类边界）。
+ */
+const cardMeta = computed(() => {
+  const task = props.task;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+
+  const dueMs = task.due_date ? new Date(task.due_date).getTime() : NaN;
+  const hasDue = Number.isFinite(dueMs);
+  const isOverdue = hasDue && dueMs < todayMs;
+
+  // ── Animal routing (same as FrontierCard, C-ring character-based) ──
+  let animal: string;
+  if (!task.due_date) {
+    animal = 'cat';
+  } else if (isOverdue) {
+    animal = 'fox';
+  } else if (hasDue && (dueMs - todayMs) / 86400000 <= 3) {
+    animal = 'penguin';
+  } else {
+    animal = task.kind === 'subtask' ? 'rabbit' : 'deer';
+  }
+
+  // ── Due-date label (same as FrontierCard) ──
+  let dueText: string;
+  if (!task.due_date) {
+    dueText = '—';
+  } else if (!hasDue) {
+    dueText = task.due_date;
+  } else if (isOverdue) {
+    dueText = `overdue ${Math.floor((todayMs - dueMs) / 86400000)}d`;
+  } else {
+    const due = new Date(dueMs);
+    dueText = `${due.getMonth() + 1}月 ${String(due.getDate()).padStart(2, '0')}`;
+  }
+
+  return { animalSrc: `/images/animal-badge/${animal}.png`, dueText, isOverdue };
+});
+
+function onDragStart(e: DragEvent) {
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', props.task.slug);
+  }
+  emit('dragstart', props.task.slug);
+}
+function onDragEnd() {
+  emit('dragend');
+}
+</script>
+
+<style scoped>
+/* Animal PNG 直接显示即可 —— 之前叠的 `filter: drop-shadow` 会把每张 <img>
+   推进到 GPU 滤镜层，~100+ 张卡的视图里 hover / scroll 都触发 paint。
+   1px 白色阴影对 80×80 透明卡上几乎不可见，但每帧 paint 成本真实存在。 */
+.animal-avatar {
+  image-rendering: pixelated;
+}
+
+/* Reveal action buttons on group hover.
+   opacity + transition-opacity 都是合成层属性，不触发 paint。 */
+.fc-actions {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.group:hover .fc-actions,
+.group:focus-within .fc-actions {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-actions {
+    transition: none;
+  }
+}
+</style>

@@ -1,0 +1,10 @@
+.squircle {
+  border-radius: 48px;
+  overflow: clip;
+
+  /* 超椭圆特性 */
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+    border-radius: 64px;
+  }
+}

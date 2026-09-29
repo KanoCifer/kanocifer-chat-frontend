@@ -1,0 +1,427 @@
+@import 'tailwindcss';
+@import 'shadow-plugin';
+@import '@readinglist/brand/themes';
+@import '@readinglist/brand/twikoo';
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/HarmonyOS_Sans_Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: '阿里妈妈东方大楷 Regular';
+  font-weight: 400;
+  src:
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/bs5CgKu7Hdck.woff2')
+      format('woff2'),
+    url('//at.alicdn.com/wf/webfont/IycYNJ7qsIni/FS1e5LRmIZGQ.woff')
+      format('woff');
+  font-variation-settings: normal;
+  font-display: swap;
+}
+@custom-variant dark (&:where(.dark, .dark *));
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  @apply scroll-smooth;
+  /* 隐藏滚动条但保持滚动功能 */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  -moz-osx-font-smoothing: grayscale; /* macOS Firefox */
+  text-rendering: optimizeLegibility; /* 渲染优化 */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 隐藏滚动条但保持滚动功能 — 用于底部抽屉等滚动区域 */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+:root {
+  margin: 0;
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+@layer base {
+  body {
+    @apply m-0;
+  }
+
+  #app {
+    @apply min-h-screen;
+  }
+  * {
+    @apply outline-ring/50;
+  }
+}
+@theme {
+  --font-family-dongfang:
+    '阿里妈妈东方大楷 Regular', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  --animate-tt-spin: tt-spin 0.8s ease-in-out forwards;
+
+  @keyframes tt-spin {
+    0% {
+      rotate: 0deg;
+    }
+    100% {
+      rotate: 60deg;
+    }
+  }
+
+  --animate-message-pop: messagePop 0.5s ease-out;
+
+  @keyframes messagePop {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px) rotateX(-16deg) scale(0.92);
+      filter: blur(32px) brightness(0.1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) rotateX(0deg) scale(1);
+      filter: blur(0px) brightness(1);
+    }
+  }
+
+  --animate-breathe: breathe 1s infinite;
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* Glow breathing (idle) — slow, low amplitude */
+  --animate-glow-breathe: glow-breathe 4s ease-in-out infinite;
+
+  @keyframes glow-breathe {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(0.95);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.05);
+    }
+  }
+
+  /* Glow pulse (generating) — faster, higher amplitude */
+  --animate-glow-pulse: glow-pulse 1.6s ease-in-out infinite;
+
+  @keyframes glow-pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.95);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.15);
+    }
+  }
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+a {
+  @apply cursor-pointer;
+}
+
+footer {
+  @apply text-muted mx-auto w-full min-w-0 p-4 text-center text-sm;
+}
+
+:root[data-font='harmonyos'] {
+  --default-font-family:
+    'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-sans: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+@theme inline {
+  /* Core */
+  --color-page: var(--page);
+  --color-ink: var(--ink);
+  --color-card: var(--card);
+  --color-surface: var(--surface);
+
+  /* Accent (was: --color-primary) */
+  --color-accent: var(--accent);
+
+  /* Secondary / Muted */
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted-text);
+
+  /* Border */
+  --color-border: var(--border);
+  --color-input: var(--secondary);
+  --color-ring: var(--accent-slate);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-surface: var(--surface);
+  --color-destructive: var(--color-rose-500);
+  --color-success: var(--color-emerald-500);
+  --color-warning: var(--color-amber-500);
+  --color-brand-devices: var(--accent);
+  --color-gradient-primary-from: var(--gradient-primary-from);
+  --color-gradient-primary-to: var(--gradient-primary-to);
+  --color-gradient-decorative-from: var(--gradient-decorative-from);
+  --color-gradient-decorative-to: var(--gradient-decorative-to);
+}
+
+@theme {
+  /* Replace default Tailwind shadow tokens with shadow-plugin smooth shadows. */
+  --shadow-xs: var(--smooth-shadow-xs);
+  --shadow-sm: var(--smooth-shadow-sm);
+  --shadow-md: var(--smooth-shadow-md);
+  --shadow-lg: var(--smooth-shadow-lg);
+  --shadow-xl: var(--smooth-shadow-xl);
+  --shadow-2xl: var(--smooth-shadow-2xl);
+}
+
+:root[data-font='harmonyos'] {
+  --default-font-family:
+    'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-sans: 'HarmonyOS Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+@layer base {
+  * {
+    @apply outline-ring/50;
+  }
+  body {
+    @apply bg-page text-ink;
+    font-family: var(--font-body);
+  }
+  /* 修复 iOS Safari 表单聚焦时自动放大 */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+@import '@readinglist/brand/prose';
+@import '@readinglist/brand/prose-magazine';
+
+/* ── 書房設定滑塊 ── driven by --track-fill custom prop ── */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 24px;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--track-fill);
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 9999px;
+  background: var(--page);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 2px color-mix(in oklch, var(--ink) 12%, transparent);
+  transition:
+    box-shadow 150ms ease-out,
+    transform 150ms ease-out;
+  cursor: pointer;
+}
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  box-shadow:
+    0 2px 6px color-mix(in oklch, var(--ink) 16%, transparent),
+    0 0 0 4px color-mix(in oklch, var(--accent) 15%, transparent);
+}
+.slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+.slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--track-fill);
+}
+.slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--page);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 2px color-mix(in oklch, var(--ink) 12%, transparent);
+  transition:
+    box-shadow 150ms ease-out,
+    transform 150ms ease-out;
+  cursor: pointer;
+}
+.slider:focus-visible {
+  outline: none;
+}
+.slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 2px 6px color-mix(in oklch, var(--ink) 16%, transparent),
+    0 0 0 4px color-mix(in oklch, var(--accent) 30%, transparent);
+}
+.slider:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 2px 6px color-mix(in oklch, var(--ink) 16%, transparent),
+    0 0 0 4px color-mix(in oklch, var(--accent) 30%, transparent);
+}
+
+/* Summary card animations */
+.summary-card {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 16px -2px oklch(from var(--color-accent) l c h / 0.08),
+    0 1px 4px oklch(from var(--color-accent) l c h / 0.04);
+}
+
+.summary-card.is-loading {
+  animation: card-breathe 2s ease-in-out infinite;
+}
+
+@keyframes card-breathe {
+  0%,
+  100% {
+    border-color: oklch(from var(--color-accent) l c h / 0.15);
+  }
+  50% {
+    border-color: oklch(from var(--color-accent) l c h / 0.35);
+    box-shadow: 0 4px 20px oklch(from var(--color-accent) l c h / 0.08);
+  }
+}
+
+/* 高德地图全屏容器 — 把 logo + 版权钉到左下角，
+   防止某层祖先 flex/transform 把绝对定位元素挤偏。 */
+.amap-fs .amap-logo {
+  left: 8px !important;
+  right: auto !important;
+  bottom: 8px !important;
+  top: auto !important;
+}
+.amap-fs .amap-copyright {
+  left: 70px !important;
+  right: auto !important;
+  bottom: 8px !important;
+  top: auto !important;
+}
+
+/* 小窗地图容器 — 隐藏 logo + 版权（仅内部使用，对外发布前需复核高德 ToS） */
+.amap-mini .amap-logo,
+.amap-mini .amap-copyright {
+  display: none !important;
+}
+
+/* Skeleton pulse — gentler than Tailwind's animate-pulse */
+.skeleton-pulse {
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ── 文章阅读体验 ── */
+/* drop cap / § 编号 / 列表 bullet / ornament hr / 分享 CTA
+   已迁至 @readinglist/brand/prose-magazine，与 vue-app 共享同一份 */
+
+/* 代码块复制按钮 tooltip */
+.copy-btn {
+  --radius-sm: 6px;
+}
+.copy-btn::before {
+  content: '复制';
+  position: absolute;
+  bottom: -150%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  transition:
+    opacity 0.2s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+  padding: 4px 8px;
+  background: var(--ink);
+  color: var(--page);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.copy-btn:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@layer base {
+  :where([class~='border']) {
+    border-color: transparent;
+    box-shadow: var(--smooth-shadow-sm);
+  }
+}

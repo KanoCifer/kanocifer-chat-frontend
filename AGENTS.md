@@ -5,6 +5,9 @@
 > 本仓库是 **kanocifer.chat 的开源前端**。后端在独立私有仓库
 > `Server-Py`（FastAPI，`/api/v2/*`）与 `Server-Go`（Gin，`/api/v3/*`），
 > 不在本仓库内 —— 不要在本仓寻找或修改后端代码。
+>
+> **本仓库是前端的唯一工作区**。历史 monorepo `ReadingList`（已转私有）
+> 保留同一份代码的拷贝与完整 git 历史，仅作归档 —— 不要在那里改前端代码。
 
 ## 1) Rules (Highest Priority)
 

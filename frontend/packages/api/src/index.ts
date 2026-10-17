@@ -87,6 +87,10 @@ export type { SocialGateway } from './gateways/social';
 export { changelogGateway } from './gateways/changelog';
 export type { ChangelogGateway } from './gateways/changelog';
 
+// ── announcement ──────────────────────────────────────────────────────
+export { announcementGateway } from './gateways/announcement';
+export type { AnnouncementGateway } from './gateways/announcement';
+
 // ── upload ────────────────────────────────────────────────────────────
 export { uploadGateway } from './gateways/upload';
 export type { UploadGateway, UploadType, UploadConfig } from './gateways/upload';

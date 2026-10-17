@@ -473,6 +473,21 @@ const router = createRouter({
       },
     },
     {
+      // 管理员公告发布页 — 与 ADMIN_USER_IDS 白名单配合，非管理员一律 NotFound。
+      path: '/admin/announcements',
+      name: 'admin-announcements',
+      component: () =>
+        import('@/features/announcements/AnnouncementAdminView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: "公告管理 - Kuroome's Blog",
+        description: '发布、编辑与删除站点公告',
+        keywords: '公告,管理员,发布,announcement',
+        transition: 'fade',
+      },
+    },
+    {
       // 通配符匹配所有未定义的路径
       path: '/:pathMatch(.*)*',
       name: 'NotFound',

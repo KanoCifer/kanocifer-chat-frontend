@@ -54,3 +54,6 @@ design-demos/
 
 # Audit artifacts
 books-audit-report.md
+deploy.sh
+deploy-react.sh
+deploy-vue.sh

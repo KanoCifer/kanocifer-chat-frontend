@@ -79,9 +79,12 @@ apiClient.interceptors.response.use(
 // 优先取后端返回的 message，无后端响应时按状态码映射友好文案
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiResponse>) => {
-    if (error.response?.data?.message) {
-      error.message = error.response.data.message;
+  (error: AxiosError<ApiResponse & { error?: string }>) => {
+    // 业务错误走 { message }，鉴权中间件的 401/403 走扁平 { error }——两种都认
+    const serverMessage =
+      error.response?.data?.message || error.response?.data?.error;
+    if (serverMessage) {
+      error.message = serverMessage;
     } else if (error.code === 'ERR_NETWORK') {
       error.message = '网络连接失败，请检查网络设置';
     } else {

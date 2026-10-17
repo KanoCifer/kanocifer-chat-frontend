@@ -120,6 +120,7 @@ import {
   Link,
   ListChecks,
   Map,
+  Megaphone,
   MessageCircleHeart,
   Newspaper,
   Rss,
@@ -199,7 +200,18 @@ const othersItems: OthersItem[] = [
   { to: '/rss', label: 'RSS', icon: Rss },
   { to: '/subscription', label: 'Subscription', icon: CreditCard },
   { to: '/color', label: 'Schemes', icon: Palette },
-  { to: '/admin/credits', label: 'Admin Credits', icon: Coins, adminOnly: true },
+  {
+    to: '/admin/credits',
+    label: 'Admin Credits',
+    icon: Coins,
+    adminOnly: true,
+  },
+  {
+    to: '/admin/announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    adminOnly: true,
+  },
   { label: 'Mobile', icon: Smartphone, action: switchToMobile },
 ];
 

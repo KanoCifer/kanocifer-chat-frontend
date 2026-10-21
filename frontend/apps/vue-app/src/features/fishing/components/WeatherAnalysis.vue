@@ -490,7 +490,11 @@ onUnmounted(() => {
       </div>
 
       <div class="text-muted text-xs leading-relaxed">
-        天气更新: {{ formatDate(normalizedData?.liveWeather?.obsTime) ?? '--'
+        天气更新:
+        {{
+          normalizedData?.liveWeather?.obsTime
+            ? formatDate(normalizedData.liveWeather.obsTime)
+            : '—'
         }}<br />
         潮汐更新: {{ formatDate(normalizedData?.tideData?.updateTime) ?? '--' }}
       </div>

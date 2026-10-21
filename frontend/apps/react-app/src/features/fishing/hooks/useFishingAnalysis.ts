@@ -11,6 +11,8 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import dayjs from 'dayjs';
+
 import { useNotificationStore } from '@/stores/notificationState';
 
 import { useFishingMapStore } from '@/features/fishing/stores/fishingMapStore';
@@ -87,6 +89,8 @@ export function useFishingAnalysis(): UseFishingAnalysisResult {
       fishingIndex: indexData ?? undefined,
       locationName,
       tideSpotName: panelTideSpotName,
+      // 用户按下分析的那一刻 —— 后端拿它当「当前时间」，缺了就用服务器时间兜底
+      generatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
     };
   }, [
     liveWeather,

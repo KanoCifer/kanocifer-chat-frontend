@@ -1,4 +1,8 @@
 import { apiClient } from '../apiClient';
+import {
+  normalizeFishingIndexPayload,
+  normalizeWeatherFull,
+} from '@readinglist/utils';
 import type {
   FishingFeedbackPayload,
   FishingFeedbackResponse,
@@ -6,9 +10,14 @@ import type {
   FishingStats,
   TideApiEnvelope,
   WeatherFullResponse,
+  WeatherFullSnapshot,
 } from '@readinglist/types';
 
 // ── 钓鱼指数 / 天气 / 潮汐网关（Vue / React 共享）──
+//
+// 天气相关的上游结构是「混代」的:后端 Go 侧同时挂着和风 v1(current/hourly/daily)
+// 与 v7(tide/indices)。归一在网关层收口 —— 消费方拿到的永远是扁平视图模型,
+// 两端 UI 与 AI 分析 payload 都不需要知道上游换代。
 
 export interface FishingGateway {
   /** 获取钓鱼指数 */
@@ -24,10 +33,10 @@ export interface FishingGateway {
   getFishingStats(): Promise<FishingStats>;
   /** 获取潮汐数据 */
   getTide(payload: { harbor: string; date: string }): Promise<TideApiEnvelope>;
-  /** 获取完整天气数据 */
+  /** 获取完整天气数据（已归一成视图模型） */
   getWeatherFull(payload: {
     location: [number, number];
-  }): Promise<WeatherFullResponse>;
+  }): Promise<WeatherFullSnapshot>;
   /** 获取高德地图安全密钥 */
   getSecurityKey(): Promise<{ securityJsCode: string }>;
 }
@@ -47,7 +56,8 @@ export const fishingGateway: FishingGateway = {
         },
       },
     );
-    return res.data.data;
+    // enriched 响应内嵌天气三块,同样是混代 —— 出网关即归一
+    return normalizeFishingIndexPayload(res.data.data);
   },
 
   async postFishingFeedback(
@@ -80,7 +90,7 @@ export const fishingGateway: FishingGateway = {
 
   async getWeatherFull(payload: {
     location: [number, number];
-  }): Promise<WeatherFullResponse> {
+  }): Promise<WeatherFullSnapshot> {
     const [lng, lat] = payload.location;
     const res = await apiClient.get<{ data: WeatherFullResponse }>(
       'v3/weather/full',
@@ -88,7 +98,7 @@ export const fishingGateway: FishingGateway = {
         params: { location: `${lng.toFixed(2)},${lat.toFixed(2)}` },
       },
     );
-    return res.data.data;
+    return normalizeWeatherFull(res.data.data);
   },
 
   async getSecurityKey(): Promise<{ securityJsCode: string }> {

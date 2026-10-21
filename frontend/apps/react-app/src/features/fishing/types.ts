@@ -79,6 +79,13 @@ export interface AnalysisPayload {
   fishingIndex?: FishingIndexData;
   locationName: string;
   tideSpotName: string;
+  /**
+   * 生成时刻 —— 用户按下分析的那一刻。
+   *
+   * 后端优先用它当「当前时间」（潮汐窗口要按用户所在地的墙上时间比），
+   * 不给就退回服务器时间 +08:00。小程序与 Vue 端都发，React 端补齐。
+   */
+  generatedAt?: string;
   modelId?: string;
 }
 

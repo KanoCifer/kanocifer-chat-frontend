@@ -141,13 +141,150 @@ export type TideResponse = TideApiEnvelope;
 
 // ---------------------------------------------------------------------------
 // 天气（和风天气 API 原始响应）
+//
+// 两代并存 —— 后端 `internal/infra/qweather` 同时挂着:
+//   - 新(v1):/weather/v1/current|hourly|daily —— 数值 + 嵌套对象,路径参数纬度在前
+//   - 旧(v7):/v7/ocean/tide、/v7/indices/1d —— 字符串 + 扁平字段
+//
+// 潮汐与生活指数尚无新版,故 /weather/full 是「混代」的。
+// 前端不直接消费原始结构:统一经 `@readinglist/utils` 的 domain/weather 归一器
+// 收口成下方「视图模型」(WeatherNow / WeatherHourly / WeatherDay / WeatherIndex)。
 // ---------------------------------------------------------------------------
+
+// ── 和风 v1（新一代）原始结构 ─────────────────────────────────────────────
+// 官方文档:https://dev.qweather.com/docs/api/weather/
+
+export interface WeatherV1Metadata {
+  /** 数据唯一标识 */
+  tag?: string;
+  /** 数据归因信息 */
+  attributions?: string[];
+}
+
+export interface WeatherV1Condition {
+  /** 本地化天气现象描述,如「少云」 */
+  text?: string;
+  /** 天气现象代码,如「102」—— 与图标字体 qi-<code> 对应 */
+  code?: string;
+}
+
+/** 带单位的数值 */
+export interface WeatherV1Measurement {
+  value?: number;
+  unit?: string;
+}
+
+export interface WeatherV1Wind {
+  direction?: {
+    /** 风向角度,取值 [0,359] */
+    degree?: number;
+    /** 16 方位代码,如 "wnw" */
+    compass?: string;
+  };
+  speed?: WeatherV1Measurement;
+  /** 蒲福风级 */
+  scale?: number;
+}
+
+export interface WeatherV1Precipitation {
+  /** 累计降水量 */
+  amount?: WeatherV1Measurement;
+  /** 降水强度 */
+  intensity?: WeatherV1Measurement;
+  /** 降水概率,取值 [0,1] */
+  probability?: number;
+  /** rain / snow / ice / mixed / none / unknown */
+  type?: string;
+}
+
+/** 实时天气块(/weather/v1/current) */
+export interface WeatherV1Current {
+  metadata?: WeatherV1Metadata;
+  condition?: WeatherV1Condition;
+  temperature?: WeatherV1Measurement;
+  feelsLike?: WeatherV1Measurement;
+  /** 相对湿度,取值 [0,1] —— 旧代是百分数字符串 */
+  humidity?: number;
+  wind?: WeatherV1Wind;
+  windGust?: WeatherV1Measurement;
+  precipitation?: WeatherV1Precipitation;
+  pressure?: WeatherV1Measurement;
+  visibility?: WeatherV1Measurement;
+  dewPoint?: WeatherV1Measurement;
+  /** 云量,取值 [0,1] */
+  cloudCover?: number;
+  uvIndex?: number;
+}
+
+/** 逐时预报条目(/weather/v1/hourly) */
+export interface WeatherV1Hour extends WeatherV1Current {
+  /** 预报时刻,如 "2026-10-21T13:00+08:00"(localTime=true) */
+  forecastTime?: string;
+}
+
+export interface WeatherV1Astro {
+  sunrise?: string;
+  sunset?: string;
+  moonrise?: string;
+  moonset?: string;
+  /** 月相代码,如 "waxing-gibbous" —— 旧代是中文 */
+  moonPhase?: string;
+}
+
+/** 白天 / 夜间时段 */
+export interface WeatherV1DayPart {
+  forecastStartTime?: string;
+  forecastEndTime?: string;
+  condition?: WeatherV1Condition;
+  temperatureMax?: WeatherV1Measurement;
+  temperatureMin?: WeatherV1Measurement;
+  /** 平均相对湿度,取值 [0,1] */
+  humidity?: number;
+  wind?: WeatherV1Wind;
+  windGustMax?: WeatherV1Measurement;
+  precipitation?: {
+    amount?: WeatherV1Measurement;
+    probability?: number;
+    type?: string;
+  };
+  /** 平均总云量,取值 [0,1] */
+  cloudCover?: number;
+}
+
+/** 每日预报条目(/weather/v1/daily) */
+export interface WeatherV1Day {
+  forecastStartTime?: string;
+  forecastEndTime?: string;
+  astro?: WeatherV1Astro;
+  temperatureMax?: WeatherV1Measurement;
+  temperatureMin?: WeatherV1Measurement;
+  temperatureAvg?: WeatherV1Measurement;
+  uvIndexMax?: number;
+  /** 白天,当地 [07:00,19:00) */
+  daytime?: WeatherV1DayPart;
+  /** 夜间,当地 [19:00,次日07:00) */
+  nighttime?: WeatherV1DayPart;
+}
+
+export interface WeatherV1HourlyResponse {
+  metadata?: WeatherV1Metadata;
+  hours?: WeatherV1Hour[];
+}
+
+export interface WeatherV1DailyResponse {
+  metadata?: WeatherV1Metadata;
+  days?: WeatherV1Day[];
+}
+
+// ── 视图模型（归一后,供 UI / AI 分析 payload 消费）─────────────────────────
+// 保持「字符串 + 扁平字段」形态:UI 组件与 /v2/llm/weather-analysis 的
+// weather_data 契约不因上游换代而变动。
 
 export interface WeatherHourly {
   fxTime: string;
-  /** QWeather 返回字符串数值,如 "29";消费方需自行 Number() 转换 */
+  /** 归一后的数值字符串,如 "29";消费方需自行 Number() 转换 */
   temp?: string;
-  /** QWeather 返回字符串数值,如 "0.5";消费方需自行 Number() 转换 */
+  /** 归一后的数值字符串,如 "0.5";消费方需自行 Number() 转换 */
   precip?: string;
   humidity?: string;
   pressure?: string;
@@ -159,12 +296,17 @@ export interface WeatherHourly {
 }
 
 export interface WeatherDay {
+  /** YYYY-MM-DD(当地日期) */
   fxDate: string;
+  /** 日出时间 —— v1 是完整时间戳("2026-10-21T06:30+08:00"),v7 是 "06:30" */
   sunrise: string;
+  /** 日落时间 —— 同 sunrise */
   sunset: string;
   moonrise: string;
   moonset: string;
+  /** 月相中文描述(由 v1 的 "waxing-gibbous" 之类代码转换而来) */
   moonPhase: string;
+  /** 月相图标代码 —— v1 不提供,归一后为空 */
   moonPhaseIcon: string;
   tempMax: string;
   tempMin: string;
@@ -180,14 +322,19 @@ export interface WeatherDay {
   windDirNight: string;
   windScaleNight: string;
   windSpeedNight: string;
+  /** 百分比字符串(如 "69")—— v1 原始值是 [0,1] 比例 */
   humidity: string;
   precip: string;
+  /** 气压 —— v1 每日预报不含气压,归一后为空 */
   pressure: string;
+  /** 能见度(km)—— v1 每日预报不含能见度,归一后为空 */
   vis: string;
+  /** 百分比字符串 —— v1 原始值是 [0,1] 比例 */
   cloud: string;
   uvIndex: string;
 }
 
+/** @deprecated 旧代(v7)每日预报包装层 —— 新代为 WeatherV1DailyResponse */
 export interface WeatherForecastResponse {
   code: string;
   updateTime: string;
@@ -220,23 +367,30 @@ export interface WeatherIndicesResponse {
 }
 
 export interface WeatherNow {
+  /** 观测时间 —— v1 payload 无此字段,归一后为空字符串(UI 需容错) */
   obsTime: string;
   temp: string;
   feelsLike: string;
   icon: string;
   text: string;
   wind360: string;
+  /** 风向中文描述 —— v1 给的是 16 方位代码(如 "wnw"),归一时转中文 */
   windDir: string;
   windScale: string;
+  /** 风速(km/h)—— v1 原始单位为 m/s,归一时换算 */
   windSpeed: string;
+  /** 百分比字符串 —— v1 原始值是 [0,1] 比例 */
   humidity: string;
   precip: string;
   pressure: string;
+  /** 能见度(km)—— v1 原始单位为 m,归一时换算 */
   vis: string;
+  /** 百分比字符串 —— v1 原始值是 [0,1] 比例 */
   cloud: string;
   dew: string;
 }
 
+/** @deprecated 旧代(v7)实时天气包装层 —— 新代为 WeatherV1Current */
 export interface WeatherLiveResponse {
   code: string;
   updateTime: string;
@@ -248,14 +402,38 @@ export interface WeatherLiveResponse {
   };
 }
 
+/**
+ * /weather/full 原始响应 —— **混代**。
+ *
+ * current / hourly / daily 走 v1(嵌套数值),tide / indices 走 v7(扁平字符串)。
+ * 块内结构随上游代际变化,故此处不写死具体形状:统一交给
+ * `normalizeWeatherFull`(@readinglist/utils)收口成 WeatherFullSnapshot。
+ */
 export interface WeatherFullResponse {
-  current?: WeatherLiveResponse;
-  daily?: WeatherForecastResponse;
-  hourly?: Record<string, unknown>;
+  /** v1 实时天气块,或旧代 { code, updateTime, now } 包装层 */
+  current?: unknown;
+  /** v1 { hours: [...] },或旧代 { hourly: [...] } */
+  hourly?: unknown;
+  /** v1 { days: [...] },或旧代 { daily: [...] } */
+  daily?: unknown;
+  /** v7 潮汐 —— 尚无新版 */
   tide?: TideData;
+  /** v7 生活指数 —— 尚无新版 */
   indices?: WeatherIndicesResponse;
   locationName?: string;
   poiId?: string;
+}
+
+/** /weather/full 归一后的快照 —— UI 与 AI 分析的统一输入 */
+export interface WeatherFullSnapshot {
+  now: WeatherNow | null;
+  hourly: WeatherHourly[];
+  daily: WeatherDay[];
+  indices: WeatherIndex[];
+  tide: TideData | null;
+  /** 数据更新时间 —— v1 无观测时间字段,取逐时首条预报时刻兜底 */
+  updateTime: string;
+  locationName: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -273,11 +451,19 @@ export interface FishingIndexData {
   level: FishingIndexLevel;
   feature_breakdown: Record<string, number>;
   // enriched 模式下附加的天气数据（后端 /v2/fishing/index enriched=true 时填充）
+  // 天气三块在 API 网关层已由 v7/v1 归一器收敛为视图模型,此处拿到的即最终形态。
   current_weather?: WeatherNow;
   forecasts?: WeatherDay[];
   location_name?: string;
   tide_data?: TideData;
   hourly_weather?: { hourly?: WeatherHourly[] };
+  /**
+   * 生活指数（后端 enriched 响应透传的和风 v7 indices 条目）。
+   *
+   * 官方没给新版，这一块本来就是扁平的，与 `WeatherIndex` 视图模型一一对应。
+   * 缺这一项 = AI 拿不到「官方说今天适宜垂钓」这个最强信号。
+   */
+  weather_indices?: WeatherIndex[] | null;
 }
 
 export interface FishingFeedbackData {

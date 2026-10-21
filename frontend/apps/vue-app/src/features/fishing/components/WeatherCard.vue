@@ -209,7 +209,9 @@ const forecastIconClass = (textDay: string): string => {
         </div>
       </div>
 
+      <!-- v1 实时天气无观测时间字段,缺省时整行不渲染(避免显示"未知时间") -->
       <p
+        v-if="liveWeather.obsTime"
         class="text-muted mt-4 text-center text-[10px] tracking-[0.18em] uppercase"
       >
         更新于 {{ formatDate(liveWeather.obsTime) }}

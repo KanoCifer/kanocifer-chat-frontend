@@ -8,7 +8,6 @@ import type {
   FishingIndexData,
   TideData,
   WeatherDay,
-  WeatherFullResponse,
   WeatherHourly,
   WeatherIndex,
   WeatherNow,
@@ -93,25 +92,17 @@ export const fishingMapService = (): FishingMapService => {
       indices: WeatherIndex[];
       tideData: TideData | null;
     }> {
-      const data = (await gateway.getWeatherFull(payload)) as
-        | WeatherFullResponse
-        | undefined;
-      const now = data?.current?.now;
-      const daily = data?.daily?.daily;
-      const hourly = data?.hourly?.hourly as WeatherHourly[] | undefined;
-      const updateTime = data?.current?.updateTime ?? data?.daily?.updateTime;
-      const locationName = data?.locationName ?? '未知地点';
-      const tideData = data?.tide ?? null;
-      const indices = data?.indices?.daily ?? [];
+      // 网关层已完成 v1/v7 混代归一,这里只做视图模型的再包装
+      const snapshot = await gateway.getWeatherFull(payload);
 
       return {
-        updateTime,
-        now,
-        daily,
-        hourly,
-        locationName,
-        indices,
-        tideData,
+        updateTime: snapshot.updateTime,
+        now: snapshot.now ?? undefined,
+        daily: snapshot.daily,
+        hourly: snapshot.hourly,
+        locationName: snapshot.locationName,
+        indices: snapshot.indices,
+        tideData: snapshot.tide,
       };
     },
 

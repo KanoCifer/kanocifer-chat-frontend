@@ -369,7 +369,7 @@ describe('normalizeWeatherFull', () => {
         tideHourly: [{ fxTime: '2026-10-21T13:00+08:00', height: '1.8' }],
       },
       indices: { code: '200', daily: [{ name: '穿衣', level: '舒适' }] },
-      locationName: '广州',
+      locationName: '广州黄埔',
     });
 
     expect(snapshot.now?.temp).toBe('8.1');
@@ -378,7 +378,7 @@ describe('normalizeWeatherFull', () => {
     expect(snapshot.indices[0]?.name).toBe('穿衣');
     expect(snapshot.tide?.tideTable[0]?.type).toBe('H');
     expect(snapshot.tide?.tideHourly[0]?.height).toBe('1.8');
-    expect(snapshot.locationName).toBe('广州');
+    expect(snapshot.locationName).toBe('广州黄埔');
   });
 
   it('falls back to the first hourly forecast time for updateTime', () => {

@@ -585,6 +585,7 @@ export const normalizeWeatherFull = (input: unknown): WeatherFullSnapshot => {
     // v1 无观测时间字段 —— 退到逐时首条预报时刻
     updateTime:
       strOf(currentRec?.updateTime) || strOf(now?.obsTime) || hourly[0]?.fxTime || '',
+    // 地点名 = 城市 + 区县（如 "北京东城"）—— Go 端已拼好，这里只取不用拼
     locationName: strOf(rec?.locationName) || '未知地点',
   };
 };

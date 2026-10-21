@@ -420,8 +420,14 @@ export interface WeatherFullResponse {
   tide?: TideData;
   /** v7 生活指数 —— 尚无新版 */
   indices?: WeatherIndicesResponse;
+  /**
+   * 地点名称 —— **城市 + 区县**（如 "北京东城"、"杭州西湖"）。
+   *
+   * 来自 Go 端 GeoAPI 城市检索（/geo/v2/city/lookup）：上游 `name` 是区县、
+   * `adm2` 是城市，Go 端拼好后给出。原先这里是景点 POI 名，配的 `poiId`
+   * 一并下线了。
+   */
   locationName?: string;
-  poiId?: string;
 }
 
 /** /weather/full 归一后的快照 —— UI 与 AI 分析的统一输入 */
@@ -433,6 +439,7 @@ export interface WeatherFullSnapshot {
   tide: TideData | null;
   /** 数据更新时间 —— v1 无观测时间字段,取逐时首条预报时刻兜底 */
   updateTime: string;
+  /** 地点名称 —— 城市 + 区县（如 "北京东城"） */
   locationName: string;
 }
 

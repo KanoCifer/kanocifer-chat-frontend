@@ -1,30 +1,41 @@
 // frontend/packages/utils/src/domain/fishingMarker.ts
 
-import { FISHING_SPOT_KIND_LABELS } from '@readinglist/types';
-import type { FishingSpotKind, MapMarker } from '@readinglist/types';
+import { fishingSpotKindLabel } from "@readinglist/types";
+import type { FishingSpotKindFull, MapMarker } from "@readinglist/types";
 
-/** kind → fill colour CSS variable. Used by fish marker divIcon HTML. */
-const KIND_FILL: Record<FishingSpotKind, { bg: string }> = {
-  lake: { bg: 'var(--color-accent)' },
-  river: { bg: 'var(--color-secondary)' },
-  reservoir: { bg: 'var(--color-page)' },
+/**
+ * kind → fill colour CSS variable. Used by fish marker divIcon HTML.
+ *
+ * Partial —— 只覆盖筛选用的三值。后端的 kind 是八值，pond / sea 这些
+ * 没有专属色位，查表落空时回退默认色（见 fillFor）。
+ */
+const KIND_FILL: Partial<Record<FishingSpotKindFull, { bg: string }>> = {
+  lake: { bg: "var(--color-accent)" },
+  river: { bg: "var(--color-secondary)" },
+  reservoir: { bg: "var(--color-page)" },
 };
 
-const DEFAULT_FILL = { bg: 'var(--color-accent)' };
+const DEFAULT_FILL = { bg: "var(--color-accent)" };
 
-/** Resolve marker fill colour for a spot kind. */
-export function fillFor(kind: FishingSpotKind | null): { bg: string } {
-  return kind ? KIND_FILL[kind] : DEFAULT_FILL;
+/**
+ * Resolve marker fill colour for a spot kind.
+ *
+ * 查表落空时回退默认色：后端的 kind 枚举是八值（pond / sea / bay …），
+ * 而这张表只声明了筛选用的三值 —— 后端发来 pond 时直接查会得到 undefined，
+ * 拼进 marker 的 background 就成了 "background: undefined"，整个标记不显示。
+ */
+export function fillFor(kind: FishingSpotKindFull | null): { bg: string } {
+  return (kind ? KIND_FILL[kind] : undefined) ?? DEFAULT_FILL;
 }
 
 /** Simple HTML escaping to prevent XSS in marker content strings. */
 export function escapeHtml(s: string): string {
   return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /**
@@ -34,16 +45,16 @@ export function escapeHtml(s: string): string {
 export function makeFishMarkerHtml(spot: MapMarker, index: number): string {
   const { bg } = fillFor(spot.kind);
   const name = spot.extraData?.name ?? `钓点 ${index + 1}`;
-  const kindLabel = spot.kind ? FISHING_SPOT_KIND_LABELS[spot.kind] : '未分类';
+  const kindLabel = fishingSpotKindLabel(spot.kind);
   const ariaLabel = `${name} · ${kindLabel}`;
   return `
     <div
       class="fish-marker"
-      data-kind="${spot.kind ?? 'unknown'}"
+      data-kind="${spot.kind ?? "unknown"}"
       data-marker-index="${index}"
       role="button"
       tabindex="0"
-      aria-label="${ariaLabel.replace(/"/g, '&quot;')}"
+      aria-label="${ariaLabel.replace(/"/g, "&quot;")}"
       style="
         width:38px;
         height:38px;
@@ -65,8 +76,8 @@ export function makeFishMarkerHtml(spot: MapMarker, index: number): string {
 
 /** Hover preview InfoWindow HTML content. */
 export function makeHoverPreviewHtml(spot: MapMarker): string {
-  const name = spot.extraData?.name || '未命名钓点';
-  const kindLabel = spot.kind ? FISHING_SPOT_KIND_LABELS[spot.kind] : '未分类';
+  const name = spot.extraData?.name || "未命名钓点";
+  const kindLabel = fishingSpotKindLabel(spot.kind);
   return `
     <div class="fish-preview-card" style="
       padding:10px 12px;

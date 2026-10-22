@@ -22,8 +22,13 @@
 import {
   FISHING_SPOT_KINDS,
   FISHING_SPOT_KIND_LABELS,
+  fishingSpotKindLabel,
 } from '@readinglist/types';
-import type { FishingSpotKind, MapMarker } from '@readinglist/types';
+import type {
+  FishingSpotKind,
+  FishingSpotKindFull,
+  MapMarker,
+} from '@readinglist/types';
 import { Loader2, Locate, Plus } from '@lucide/vue';
 import { AnimatePresence, Motion } from 'motion-v';
 import { computed, ref } from 'vue';
@@ -48,14 +53,14 @@ const emit = defineEmits<{
   select: [spot: MapMarker];
   locate: [];
   addSpot: [];
-  changeFilter: [kinds: Set<FishingSpotKind>];
+  changeFilter: [kinds: Set<FishingSpotKindFull>];
 }>();
 
 /**
  * 本地筛选状态 —— 空 Set 表示「全部」,Set 元素为用户选中的 kind。
  * emit changeFilter 给父组件;父组件负责把状态同步给 MapContainer。
  */
-const selectedKinds = ref<Set<FishingSpotKind>>(new Set());
+const selectedKinds = ref<Set<FishingSpotKindFull>>(new Set());
 
 /** 筛选后的 spot 列表 —— 按原始顺序,无 kind 过滤切换导致的重排 */
 const visibleSpots = computed<MapMarker[]>(() => {
@@ -71,7 +76,10 @@ const kindCount = computed<Record<FishingSpotKind, number>>(() => {
     FISHING_SPOT_KINDS.map((k) => [k, 0]),
   ) as Record<FishingSpotKind, number>;
   for (const spot of props.spots) {
-    if (spot.kind && spot.kind in counts) counts[spot.kind]++;
+    // spot.kind 是后端八值，counts 只覆盖筛选用的三值 ——
+    // 不在 chips 里的类型不进计数（`in` 判断就是这道闸）。
+    const key = spot.kind as FishingSpotKind | null;
+    if (key && key in counts) counts[key]++;
   }
   return counts;
 });
@@ -307,7 +315,7 @@ const PIN_KIND_BG: Record<FishingSpotKind, string> = {
                   v-if="spot.kind"
                   class="text-muted font-family-averia mt-1.5 text-[10px] tracking-[0.2em] uppercase"
                 >
-                  {{ FISHING_SPOT_KIND_LABELS[spot.kind] }}
+                  {{ fishingSpotKindLabel(spot.kind) }}
                 </p>
               </div>
             </div>

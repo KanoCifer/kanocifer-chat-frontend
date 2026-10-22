@@ -488,6 +488,20 @@ const router = createRouter({
       },
     },
     {
+      // 管理员钓点管理页 — 审核待审队列 + 就地纠错。
+      path: '/admin/fishing-spots',
+      name: 'admin-fishing-spots',
+      component: () => import('@/features/fishing/AdminFishingSpotsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: "钓点管理 - Kuroome's Blog",
+        description: '审核用户投稿的钓点：放行、驳回或就地纠错',
+        keywords: '钓点,管理员,审核,放行,驳回,fishing,admin',
+        transition: 'fade',
+      },
+    },
+    {
       // 通配符匹配所有未定义的路径
       path: '/:pathMatch(.*)*',
       name: 'NotFound',

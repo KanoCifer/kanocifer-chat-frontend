@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { Globe, Loader2, Locate, Map, Plus } from '@lucide/vue';
-import type { FishingSpotKind, MapMarker } from '@readinglist/types';
+import type { FishingSpotKindFull, MapMarker } from '@readinglist/types';
 import { loadAMapNamespace } from '@/features/fishing/composables/amapNamespace';
 import type { AMapWithPlugins } from '@/features/fishing/composables/amapNamespace';
 import {
@@ -92,7 +92,7 @@ interface Props {
    * 可见的 kind 集合(任务 284 chip 选择器驱动)。
    * null / 空 Set = 全部可见。null kind 的 marker 在 kinds 非空时也视为不可见。
    */
-  visibleKinds?: Set<FishingSpotKind> | null;
+  visibleKinds?: Set<FishingSpotKindFull> | null;
   /** 当前 hover 的 marker(任务 284 列表 hover 同步驱动 InfoWindow) */
   hoveredMarker?: MapMarker | null;
 }

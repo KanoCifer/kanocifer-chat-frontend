@@ -13,23 +13,144 @@
  * 钓点水体类型 —— 与 go-backend document.Kind* 常量、Python models 的 kind 字段共用同一组字面量。
  * 三值封闭：新增类型须同步 Go / Python 的校验枚举。
  */
-export type FishingSpotKind = 'lake' | 'river' | 'reservoir';
+export type FishingSpotKind = "lake" | "river" | "reservoir";
 
 /** 遍历用的有序全集 —— filter chips / 选择器按此顺序渲染 */
 export const FISHING_SPOT_KINDS: readonly FishingSpotKind[] = [
-  'lake',
-  'river',
-  'reservoir',
+  "lake",
+  "river",
+  "reservoir",
 ] as const;
 
 /** 中文展示 label —— UI 层唯一文案来源，勿在组件内内联硬编码 */
-export const FISHING_SPOT_KIND_LABELS: Readonly<
-  Record<FishingSpotKind, string>
-> = {
-  lake: '湖泊',
-  river: '溪流·江',
-  reservoir: '水库',
+export const FISHING_SPOT_KIND_LABELS: Readonly<Record<FishingSpotKind, string>> = {
+  lake: "湖泊",
+  river: "溪流·江",
+  reservoir: "水库",
 };
+
+/**
+ * 后端全部水体类型的 label —— 与 Go `model.FishingSpotKind*`、小程序端同名表一致。
+ *
+ * 为什么和上面的 `FISHING_SPOT_KIND_LABELS` 并存：
+ * 后端的枚举早已是八值（pond / sea / bay / estuary / fishing_ground 都在），
+ * 而 Web 端的 `FishingSpotKind` 仍只声明了筛选 chips 用的三值。
+ * 直接把类型扩到八值会连带地图 marker 配色（`KIND_FILL`）与侧栏色块
+ * （`PIN_KIND_BG`）两处穷举映射一起改 —— 那是视觉决策，不该由一次
+ * 后台功能顺带改掉。
+ *
+ * 于是分成两张表：筛选与配色继续认三值那张，展示（审核列表、详情）
+ * 用这张 —— 后端发来的 pond 要显示成「池塘·野塘」，而不是「未分类」。
+ */
+export const FISHING_SPOT_KIND_ALL_LABELS: Readonly<Record<string, string>> = {
+  lake: "湖泊",
+  river: "溪流·江",
+  reservoir: "水库",
+  pond: "池塘·野塘",
+  sea: "海洋·近海",
+  bay: "海湾",
+  estuary: "河口",
+  fishing_ground: "钓场",
+};
+
+/** 未分类 —— 后端 omitempty 时 kind 整个键不存在 */
+export const FISHING_SPOT_KIND_UNKNOWN_LABEL = "未分类";
+
+/**
+ * 后端支持的**全部**水体类型 —— 与 Go `model.FishingSpotKind*`、小程序端同名表一致。
+ *
+ * 为什么与 `FishingSpotKind`（筛选用的三值）分开：
+ * 把 `FishingSpotKind` 本身扩到八值，会连带地图 marker 配色（`KIND_FILL`）
+ * 与侧栏色块（`PIN_KIND_BG`）两处穷举映射一起改 —— 八种类型要塞进现成的
+ * 三四个色位必然撞色，而那是视觉决策，不该由一次后台功能顺带改掉。
+ *
+ * 于是按用途分两个类型：筛选与配色认三值那个，载荷与展示认这个。
+ */
+export type FishingSpotKindFull =
+  | "lake"
+  | "river"
+  | "reservoir"
+  | "pond"
+  | "sea"
+  | "bay"
+  | "estuary"
+  | "fishing_ground";
+
+/** 全集的有序列表 —— 后台编辑面板的类型选择器按此渲染 */
+export const FISHING_SPOT_KIND_FULLS: readonly FishingSpotKindFull[] = [
+  "lake",
+  "river",
+  "reservoir",
+  "pond",
+  "sea",
+  "bay",
+  "estuary",
+  "fishing_ground",
+] as const;
+
+/**
+ * 水体类型 label —— 认不出的值一律按未分类兜底。
+ *
+ * 参数收 `string` 而不是 `FishingSpotKind`：接口数据不是联合类型就是联合类型，
+ * 后端发了新枚举而前端没跟上时，落成「未分类」比落成空白好。
+ */
+export function fishingSpotKindLabel(kind: string | null | undefined): string {
+  if (!kind) return FISHING_SPOT_KIND_UNKNOWN_LABEL;
+  return FISHING_SPOT_KIND_ALL_LABELS[kind] ?? FISHING_SPOT_KIND_UNKNOWN_LABEL;
+}
+
+/**
+ * 审核状态 —— 与后端 `model.FishingSpotStatus` 同集合。
+ * 公开列表里恒为 approved，待审核 / 已驳回只有属主和管理员看得到。
+ */
+export type FishingSpotStatus = "pending" | "approved" | "rejected";
+
+/**
+ * 审核状态 label —— 措辞按「谁在看」定：
+ * rejected 说的是「未通过」而不是「被拒绝」—— 作者还要能改完再交。
+ * 与小程序端 `src/types/fishing.ts` 的同名表保持一致。
+ */
+export const FISHING_SPOT_STATUS_LABELS: Readonly<Record<FishingSpotStatus, string>> = {
+  pending: "待审核",
+  approved: "已通过",
+  rejected: "未通过",
+};
+
+/** 收费情况 —— 与后端 `dto.FishingSpotRequest.FeeType` 的 oneof 校验同集合 */
+export type FishingSpotFeeType = "free" | "paid" | "unknown";
+
+/** 道路情况 —— 后端 oneof 校验同集合 */
+export type FishingSpotRoadCondition = "good" | "fair" | "bad" | "unknown";
+
+/** 能否车到水边 —— 后端 oneof 校验同集合 */
+export type FishingSpotCarAccess = "yes" | "no" | "unknown";
+
+export const FISHING_SPOT_FEE_LABELS: Readonly<Record<FishingSpotFeeType, string>> = {
+  free: "免费",
+  paid: "收费",
+  unknown: "未知",
+};
+
+export const FISHING_SPOT_ROAD_LABELS: Readonly<Record<FishingSpotRoadCondition, string>> = {
+  good: "好 · 全程公路",
+  fair: "一般 · 部分土路",
+  bad: "差 · 需徒步",
+  unknown: "未知",
+};
+
+export const FISHING_SPOT_CAR_LABELS: Readonly<Record<FishingSpotCarAccess, string>> = {
+  yes: "能",
+  no: "车到不了",
+  unknown: "未知",
+};
+
+/** 钓点归属快照 —— 昵称与头像都冗余存在钓点主表里 */
+export interface FishingSpotOwner {
+  user_id: number;
+  name: string;
+  /** 头像 URL，omitempty —— 没设过头像时整个字段不发 */
+  avatar?: string;
+}
 
 export interface FishingSpot {
   id: string;
@@ -40,11 +161,47 @@ export interface FishingSpot {
   /**
    * 水体类型。字段必需存在，值可为 null ——
    * 遗留行经 migration 名字启发式回填，未匹配的少数留 null，UI 按未分类（muted）渲染。
+   *
+   * 类型是后端的**全部八值**（不是筛选用的三值）：接口数据就是八值，
+   * 类型写窄了等于逼着每个消费点都去断言一次。
+   *
+   * ⚠️ 展示请走 `fishingSpotKindLabel()`，别直接查 `FISHING_SPOT_KIND_LABELS`：
+   * 那张表只覆盖筛选用的三值，后端发来的 pond 在里面查不到。
    */
-  kind: FishingSpotKind | null;
+  kind: FishingSpotKindFull | null;
   tags: string[];
   rating: number;
   images: string[];
+  /** 文字地址。后端 omitempty，没填就不发 */
+  address?: string;
+  /** 审核状态。公开列表恒为 approved，待审核 / 已驳回只有属主和管理员看得到 */
+  status?: FishingSpotStatus;
+  /** 审核备注 —— 管理员驳回时写给作者的原因 */
+  review_note?: string;
+  /** 审核人 user.id。没审过时整个键不存在 */
+  reviewer_id?: number;
+  /** 审核时间。没审过时整个键不存在 */
+  reviewed_at?: string;
+  /** 归属。没有属主时为 nil，整个字段不发 */
+  owner?: FishingSpotOwner | null;
+  /** 收费情况 */
+  fee_type?: FishingSpotFeeType;
+  /** 收费金额（元）。只有 fee_type 为 paid 时才有值 */
+  fee_amount?: number | null;
+  /** 适合的钓法：路亚 / 手竿 / 夜钓 … */
+  suitable_for?: string[];
+  /** 道路情况 */
+  road_condition?: FishingSpotRoadCondition;
+  /** 能否车到水边 */
+  car_access?: FishingSpotCarAccess;
+  /** 开放时间，如"全天" / "06:00-18:00" */
+  opening_hours?: string;
+  /** 参与评分人数 */
+  rating_count?: number;
+  /** 浏览量 */
+  view_count?: number;
+  /** 自由扩展位，后端原样透传展示 */
+  meta?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,27 +209,75 @@ export interface FishingSpot {
 /**
  * 创建钓点载荷 —— 与 dto.FishingSpotIn 对齐。
  * Name / Location / Kind 必填（binding:"required,oneof=lake river reservoir"），其余可选。
+ *
+ * meta 那组字段（收费 / 路况 / 车到水边 / 开放时间 / 适合钓法）后端会做 oneof
+ * 校验，取值必须落在各自的枚举里 —— 空串会被后端归一成 unknown，不报错。
  */
 export interface CreateFishingSpotPayload {
   name: string;
   /** [lng, lat] */
   location: [number, number];
   /** 新建时严格必填 —— 不接受 null，后端 oneof 校验会拒绝非法值 */
-  kind: FishingSpotKind;
+  kind: FishingSpotKindFull;
   description?: string;
   tags?: string[];
   rating?: number;
   images?: string[];
+  /** 文字地址 */
+  address?: string;
+  /** 收费情况 */
+  fee_type?: FishingSpotFeeType;
+  /** 收费金额（元）。只有 fee_type 为 paid 时才有值 */
+  fee_amount?: number | null;
+  /** 适合的钓法 */
+  suitable_for?: string[];
+  /** 道路情况 */
+  road_condition?: FishingSpotRoadCondition;
+  /** 能否车到水边 */
+  car_access?: FishingSpotCarAccess;
+  /** 开放时间，如「全天」/「06:00-18:00」 */
+  opening_hours?: string;
 }
 
 /**
  * 更新钓点载荷 —— 与 dto.FishingSpotUpdate 对齐。
  * 全字段可选：未传 = 不动，传了 = 显式覆盖（Partial update）。
+ *
+ * ⚠️ `tags` 与 `images` 是整组替换：传数组 = 整组换掉，不传 = 不动。
+ * 只改名字却把它们带上（哪怕是原值）才是安全的做法 —— 传空数组会清空。
  */
 export type UpdateFishingSpotPayload = Partial<CreateFishingSpotPayload>;
 
+/**
+ * 审核载荷 —— POST /v3/fish/spots/:id/review。
+ *
+ * 驳回时 `note` 必填（后端会拦，返 400 review_note_required）：
+ * 作者在「我的钓点」里唯一能看到的管理员信息就是它。
+ */
+export interface FishingSpotReviewPayload {
+  /** true = 放行（approved），false = 驳回（rejected） */
+  approve: boolean;
+  /** 审核备注。驳回时必填，放行可留空 */
+  note?: string;
+}
+
+/** 管理后台列表的查询参数 —— 对应 GET /v3/fish/spots/admin */
+export interface FishingSpotAdminListQuery {
+  /** pending / approved / rejected；省略 = 全部状态 */
+  status?: FishingSpotStatus;
+  kind?: string;
+  tag?: string;
+  keyword?: string;
+  /** 页码，从 1 起。后台列表始终分页（缺省 50 条一页） */
+  page?: number;
+  page_size?: number;
+  order_by?: "created_at" | "updated_at" | "rating" | "name" | "view_count";
+  /** 默认倒序（最新提交的排前面）；要正序得显式传 false */
+  desc?: boolean;
+}
+
 /** 钓点业务字段(location 除外)—— MapMarker.extraData 的精确类型 */
-export type SpotDetail = Omit<FishingSpot, 'location'>;
+export type SpotDetail = Omit<FishingSpot, "location">;
 
 // ---------------------------------------------------------------------------
 // 钓点编辑器(view 层契约，与 useSpotEditor seam 配套)
@@ -103,8 +308,11 @@ export interface SpotEditorDraft {
   /** 编辑器内用逗号分隔的字符串;提交时 split → trim → filter(Boolean) → tags: string[] */
   tags: string;
   rating: number;
-  /** create 模式下必填(null = 未选);edit 模式下可空字符串,与后端保持一致。 */
-  kind: FishingSpotKind | null;
+  /**
+   * 水体类型。类型是后端的全部八值 —— 草稿要能承载接口原样回填的值，
+   * 窄成三值会让 pond / sea 这类在编辑时无处安放。
+   */
+  kind: FishingSpotKindFull | null;
   /** [lng, lat] —— create 模式必填;edit 模式始终 null,坐标编辑走其他 seam。 */
   coordinate: [number, number] | null;
 }
@@ -121,7 +329,7 @@ export const SPOT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export interface TideTableItem {
   fxTime: string;
   height: number | string;
-  type: 'H' | 'L';
+  type: "H" | "L";
 }
 
 export interface TideData {
@@ -447,8 +655,8 @@ export interface WeatherFullSnapshot {
 // 钓鱼指数 / 反馈
 // ---------------------------------------------------------------------------
 
-export type FishingLevel = '爆护' | '好' | '一般' | '差' | '空军';
-export type FishingIndexLevel = FishingLevel | '极好';
+export type FishingLevel = "爆护" | "好" | "一般" | "差" | "空军";
+export type FishingIndexLevel = FishingLevel | "极好";
 export type FishingFeedbackLevel = FishingLevel;
 
 export interface FishingIndexData {
@@ -483,7 +691,7 @@ export interface FishingFeedbackData {
   precipitation: number;
   indices: number;
   tide_level: number;
-  tide_type?: '涨潮' | '退潮';
+  tide_type?: "涨潮" | "退潮";
   tide_range: number;
   hours_to_next_tide: number;
 }
@@ -499,7 +707,7 @@ export interface FishingFeedbackPayload {
   precipitation?: number;
   indices?: number;
   tide_level?: number;
-  tide_type?: '涨潮' | '退潮';
+  tide_type?: "涨潮" | "退潮";
   tide_range?: number;
   hours_to_next_tide?: number;
   feedback: FishingFeedbackLevel;
@@ -538,10 +746,10 @@ export interface FishingStats {
  */
 export interface MapMarker {
   position: [number, number];
-  kind: FishingSpotKind | null;
+  kind: FishingSpotKindFull | null;
   content?: string;
   offset?: [number, number];
-  extraData?: Omit<FishingSpot, 'location'>;
+  extraData?: Omit<FishingSpot, "location">;
 }
 
 // ---------------------------------------------------------------------------

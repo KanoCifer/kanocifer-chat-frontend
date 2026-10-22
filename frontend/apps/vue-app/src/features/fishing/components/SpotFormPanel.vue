@@ -111,7 +111,12 @@ function onKindKeydown(event: KeyboardEvent): void {
     return;
   }
   event.preventDefault();
-  const idx = draft.value.kind === null ? 0 : kinds.indexOf(draft.value.kind);
+  // kinds 是筛选用的三值，草稿里的 kind 是后端八值 —— 用 findIndex 而不是
+  // indexOf（后者要求参数与元素同型）。
+  const idx =
+    draft.value.kind === null
+      ? 0
+      : kinds.findIndex((k) => k === draft.value.kind);
   const dir = k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 1;
   const nextIdx = (idx + dir + kinds.length) % kinds.length;
   draft.value.kind = kinds[nextIdx]!;

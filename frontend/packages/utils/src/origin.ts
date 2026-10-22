@@ -87,3 +87,45 @@ export function rewriteMediaUrl(rawUrl: string, config?: OriginConfig): string {
 
   return `${origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
 }
+
+/** media 路由前缀 —— 存储相对路径取图的唯一入口。 */
+const MEDIA_PREFIX = 'v3/media/';
+
+/**
+ * 把后端存的**媒体相对路径**拼成可直接塞进 `<img src>` 的绝对地址。
+ *
+ * 背景：钓点这类接口返回的 `images` 是存储相对路径（形如
+ * `gallery/19/xxx.jpg`），直接塞进 `<img src>` 会被浏览器按当前页面解析成
+ * `https://kanocifer.chat/admin/gallery/19/xxx.jpg` —— 必然 404。
+ * 真正的取图入口在 API 域的 media 路由上：`/v3/media/{存储路径}`。
+ *
+ * 与 `rewriteMediaUrl` 的分工：那个函数处理「已经是完整 URL、只是 origin
+ * 不对」的历史数据；这个函数处理「存的是相对路径」的常态数据 —— 相对路径
+ * 要补 media 前缀，绝对 URL 不能补（补了就双重前缀）。
+ *
+ * 规则：
+ * 1. 空字符串 —— 原样返回；
+ * 2. 已是 http(s) 绝对 URL —— 原样返回；
+ * 3. 相对路径 —— 拼成 `${API_ORIGIN}/v3/media/${路径}`；
+ * 4. 路径自带 media 前缀（`v3/media/` 或老路由 `api/v1/media/`）—— 只补 origin。
+ */
+export function mediaUrl(rawPath: string, config?: OriginConfig): string {
+  if (!rawPath) return '';
+
+  const isAbsolute =
+    rawPath.startsWith('http://') || rawPath.startsWith('https://');
+  if (isAbsolute) return rawPath;
+
+  const origin = config?.apiDomain
+    ? `https://${config.apiDomain}`
+    : DEFAULT_API_ORIGIN;
+
+  const path = rawPath.replace(/^\/+/, '');
+  if (
+    path.startsWith(MEDIA_PREFIX) ||
+    path.startsWith('api/v1/media/')
+  ) {
+    return `${origin}/${path}`;
+  }
+  return `${origin}/${MEDIA_PREFIX}${path}`;
+}

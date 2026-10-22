@@ -4,7 +4,7 @@
  * 镜像 Vue 端 fishingMapRuntime.ts。把 marker 渲染、kind 过滤、hover preview、
  * 定位、路线规划等 AMap 操作收拢到此 class;React hook (useMap) 只负责生命周期编排。
  */
-import type { FishingSpotKind, MapMarker } from '@readinglist/types';
+import type { FishingSpotKindFull, MapMarker } from '@readinglist/types';
 
 import type { AMapWithPlugins, InfoWindowInstance } from './amapNamespace';
 import type { RouteInfo } from '../types';
@@ -149,7 +149,7 @@ export class FishingMapRuntime {
 
   // ---- kind 过滤 ----
 
-  setVisibleKinds(kinds: Set<FishingSpotKind> | null): void {
+  setVisibleKinds(kinds: Set<FishingSpotKindFull> | null): void {
     const allVisible = !kinds || kinds.size === 0;
     this.markers.forEach((marker, i) => {
       const spot = this.markerSources[i];

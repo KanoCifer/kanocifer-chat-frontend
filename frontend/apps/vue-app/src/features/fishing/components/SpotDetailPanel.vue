@@ -28,6 +28,7 @@ import type {
 } from '@readinglist/types';
 import { SPOT_MAX_PICTURES } from '@readinglist/types';
 import { fishingSpotsGateway } from '@readinglist/api';
+import { mediaUrl } from '@/composables';
 import { UploadDropzone, UploadProgress } from '@/features/upload/components';
 import {
   ImageOff,
@@ -95,6 +96,17 @@ function openLightbox(i: number): void {
   photoIndex.value = i;
   lightboxOpen.value = true;
 }
+
+/**
+ * 照片墙与灯箱用的可加载地址。
+ *
+ * 后端存的 images 是存储相对路径（gallery/19/xxx.jpg），直接进 <img src>
+ * 会被浏览器按当前页面域名解析 —— 必然 404。这里统一补上 API 域的
+ * media 路由前缀。展示值与保存值分离：回传后台的仍是原始相对路径。
+ */
+const spotImages = computed(() =>
+  (spot.value?.images ?? []).map((path) => mediaUrl(path)),
+);
 
 // ── 打开高德地图(任务 279 路线规划下线后的替代入口) ──
 //
@@ -436,7 +448,11 @@ watch(
                   class="group bg-surface relative aspect-square overflow-hidden rounded-xl"
                   :class="{ 'opacity-60': !!p.uploadedAt && !pendingError }"
                 >
-                  <img :src="p.url" alt="" class="h-full w-full object-cover" />
+                  <img
+                    :src="mediaUrl(p.url)"
+                    alt=""
+                    class="h-full w-full object-cover"
+                  />
                   <button
                     type="button"
                     class="bg-page/80 text-ink hover:bg-page absolute top-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full opacity-0 shadow-sm backdrop-blur-md transition-opacity group-hover:opacity-100"
@@ -572,7 +588,7 @@ watch(
           <!-- 照片墙 -->
           <div v-if="spot?.images.length" class="grid grid-cols-2 gap-2">
             <button
-              v-for="(img, i) in spot.images"
+              v-for="(img, i) in spotImages"
               :key="img"
               type="button"
               class="group /30 relative block overflow-hidden rounded-xl border"
@@ -640,7 +656,7 @@ watch(
     <!-- 照片灯箱 -->
     <SpotPhotoLightbox
       v-if="lightboxOpen && spot?.images.length"
-      :images="spot.images"
+      :images="spotImages"
       :index="photoIndex"
       :title="spot.name"
       @close="lightboxOpen = false"

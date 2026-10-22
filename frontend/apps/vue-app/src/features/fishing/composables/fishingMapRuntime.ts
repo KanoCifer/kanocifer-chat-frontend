@@ -9,7 +9,7 @@
  * 定位失败时降级到 CitySearch IP 城市级定位。
  */
 import type { AMapWithPlugins } from '@/features/fishing/composables/amapNamespace';
-import type { FishingSpotKind, MapMarker } from '@readinglist/types';
+import type { FishingSpotKindFull, MapMarker } from '@readinglist/types';
 import { makeFishMarkerHtml, makeHoverPreviewHtml } from '@readinglist/utils';
 
 // ---- AMap 内部服务类型(本文件独占,不导出)----
@@ -32,7 +32,7 @@ export interface FishingMapInstance {
    * 不销毁实例,过渡走 200ms CSS(opacity + transform)。
    * 集合内不放 null —— null kind 的 marker 在 kinds 非空时一律视为不可见。
    */
-  setVisibleKinds: (kinds: Set<FishingSpotKind> | null) => void;
+  setVisibleKinds: (kinds: Set<FishingSpotKindFull> | null) => void;
   /** hover preview —— AMap.InfoWindow 显示 name + kind + region;null = 关闭 */
   setHoverPreview: (spot: MapMarker | null) => void;
 }
@@ -205,7 +205,7 @@ export class FishingMapRuntime {
    * - transitionend 与 CSS 真实时长同步;CSS 改 200ms 时不用动这里
    * - transitionend + e.propertyName 去重(opacity / transform 同时触发,只取首个)
    */
-  setVisibleKinds(kinds: Set<FishingSpotKind> | null): void {
+  setVisibleKinds(kinds: Set<FishingSpotKindFull> | null): void {
     const allVisible = !kinds || kinds.size === 0;
     let needsFallback = false;
     this.markers.forEach((marker, i) => {

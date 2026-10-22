@@ -6,7 +6,7 @@ import { useNotificationStore } from '@/stores';
 import { fishingSpotsGateway } from '@readinglist/api';
 import type {
   FishingIndexData,
-  FishingSpotKind,
+  FishingSpotKindFull,
   MapMarker,
 } from '@readinglist/types';
 import { toMapMarker, toMapMarkers } from '@/features/fishing/types';
@@ -188,7 +188,7 @@ export function useFishingDashboard() {
    * 父组件 watch 后调用 map.setVisibleKinds;MapContainer 自己也接受
    * visibleKinds prop 双向同步。本 ref 作为单一真源。
    */
-  const activeFilter = ref<Set<FishingSpotKind> | null>(null);
+  const activeFilter = ref<Set<FishingSpotKindFull> | null>(null);
   /**
    * Sidebar / marker click 共用选中 index —— 指向原始数组。
    */
@@ -205,7 +205,7 @@ export function useFishingDashboard() {
   const isLocating = ref(false);
 
   /** Sidebar chip 切换 → 更新本地状态 + 通知地图过滤 marker */
-  function onFilterChange(kinds: Set<FishingSpotKind>): void {
+  function onFilterChange(kinds: Set<FishingSpotKindFull>): void {
     activeFilter.value = kinds.size > 0 ? kinds : null;
     mapTileRef.value?.setVisibleKinds(activeFilter.value);
   }

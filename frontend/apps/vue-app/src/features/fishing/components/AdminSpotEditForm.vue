@@ -18,7 +18,7 @@
  */
 import { useSpotEditor } from '@/features/fishing/composables';
 import { fishingSpotsGateway } from '@readinglist/api';
-import { mediaUrl } from '@/composables';
+import { mediaPath, mediaUrl } from '@/composables';
 import { useNotificationStore } from '@/stores';
 import { UploadDropzone, UploadProgress } from '@/features/upload/components';
 import {
@@ -171,7 +171,7 @@ function buildUpdate(): UpdateFishingSpotPayload {
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean),
-    images: pictures.value.map((p) => p.url),
+    images: pictures.value.map((p) => mediaPath(p.url)),
     address: address.value.trim(),
     fee_type: feeType.value,
     road_condition: roadCondition.value,

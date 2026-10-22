@@ -91,41 +91,90 @@ export function rewriteMediaUrl(rawUrl: string, config?: OriginConfig): string {
 /** media 路由前缀 —— 存储相对路径取图的唯一入口。 */
 const MEDIA_PREFIX = 'v3/media/';
 
+/** 已知的 media 前缀形态 —— 新路由与老路由都认。 */
+const MEDIA_PREFIXES = ['v3/media/', 'api/v1/media/'] as const;
+
 /**
- * 把后端存的**媒体相对路径**拼成可直接塞进 `<img src>` 的绝对地址。
+ * 剥掉路径里所有重复的 media 前缀，只留裸存储路径。
+ *
+ * 为什么需要「剥而不是补」：前缀的来源不止一处 ——
+ * 后端 upload 接口返回的 url 带 `v3/media/`，序列化时又可能拼一次，
+ * 于是同一个文件出现 `v3/media/v3/media/gallery/1/x.jpg` 这种叠层。
+ * 补前缀只会越补越多；剥前缀则无论叠了几层都收敛到同一个裸路径。
+ */
+function stripMediaPrefix(path: string): string {
+  let rest = path.replace(/^\/+/, '');
+  let stripped = true;
+  while (stripped) {
+    stripped = false;
+    for (const prefix of MEDIA_PREFIXES) {
+      if (rest.startsWith(prefix)) {
+        rest = rest.slice(prefix.length);
+        stripped = true;
+        break;
+      }
+    }
+  }
+  return rest;
+}
+
+/** 取路径部分 —— 绝对 URL 取 pathname，相对路径原样。 */
+function toPathPart(rawPath: string): string {
+  if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+    try {
+      return new URL(rawPath).pathname;
+    } catch {
+      return rawPath;
+    }
+  }
+  return rawPath;
+}
+
+/**
+ * 把后端返回的媒体路径归一成可直接塞进 `<img src>` 的绝对地址。
  *
  * 背景：钓点这类接口返回的 `images` 是存储相对路径（形如
  * `gallery/19/xxx.jpg`），直接塞进 `<img src>` 会被浏览器按当前页面解析成
  * `https://kanocifer.chat/admin/gallery/19/xxx.jpg` —— 必然 404。
- * 真正的取图入口在 API 域的 media 路由上：`/v3/media/{存储路径}`。
- *
- * 与 `rewriteMediaUrl` 的分工：那个函数处理「已经是完整 URL、只是 origin
- * 不对」的历史数据；这个函数处理「存的是相对路径」的常态数据 —— 相对路径
- * 要补 media 前缀，绝对 URL 不能补（补了就双重前缀）。
+ * 真正的取图入口在 API 域的 media 路由上：`/v3/media/{裸存储路径}`。
  *
  * 规则：
  * 1. 空字符串 —— 原样返回；
- * 2. 已是 http(s) 绝对 URL —— 原样返回；
- * 3. 相对路径 —— 拼成 `${API_ORIGIN}/v3/media/${路径}`；
- * 4. 路径自带 media 前缀（`v3/media/` 或老路由 `api/v1/media/`）—— 只补 origin。
+ * 2. 剥掉所有重复的 media 前缀（`v3/media/` / `api/v1/media/`）；
+ * 3. 拼成 `${API_ORIGIN}/v3/media/${裸路径}` —— 永远只有一层前缀；
+ * 4. 不在 media 路由下的绝对 URL（外部图床）—— 原样返回，不改它的域。
  */
 export function mediaUrl(rawPath: string, config?: OriginConfig): string {
   if (!rawPath) return '';
-
-  const isAbsolute =
-    rawPath.startsWith('http://') || rawPath.startsWith('https://');
-  if (isAbsolute) return rawPath;
 
   const origin = config?.apiDomain
     ? `https://${config.apiDomain}`
     : DEFAULT_API_ORIGIN;
 
-  const path = rawPath.replace(/^\/+/, '');
-  if (
-    path.startsWith(MEDIA_PREFIX) ||
-    path.startsWith('api/v1/media/')
-  ) {
-    return `${origin}/${path}`;
-  }
-  return `${origin}/${MEDIA_PREFIX}${path}`;
+  const path = toPathPart(rawPath);
+  const bare = stripMediaPrefix(path);
+  const hadPrefix = bare !== path.replace(/^\/+/, '');
+
+  // 剥不掉前缀且是绝对 URL → 外部图床，不改它的域
+  if (!hadPrefix && path !== rawPath) return rawPath;
+  if (!bare) return `${origin}/${MEDIA_PREFIX}`;
+  return `${origin}/${MEDIA_PREFIX}${bare}`;
+}
+
+/**
+ * 把媒体路径归一成**裸存储路径**（`gallery/1/x.jpg`）—— 回传后端时用。
+ *
+ * 前缀归前端拼：后端存什么形态都先剥到裸路径再入库，
+ * 下游再拼前缀也不会叠层。绝对 URL 同样只留路径部分。
+ */
+export function mediaPath(rawPath: string): string {
+  if (!rawPath) return '';
+
+  const path = toPathPart(rawPath);
+  const bare = stripMediaPrefix(path);
+  const hadPrefix = bare !== path.replace(/^\/+/, '');
+
+  // 剥不掉前缀且是绝对 URL → 外部图床，保留完整 URL
+  if (!hadPrefix && path !== rawPath) return rawPath;
+  return bare;
 }

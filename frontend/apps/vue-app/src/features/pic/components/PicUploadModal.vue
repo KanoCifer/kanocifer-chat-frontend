@@ -129,7 +129,7 @@ import { useUpload } from '@/features/upload/composables';
 import { UploadDropzone, UploadProgress } from '@/features/upload/components';
 import { newPictureId } from '@/features/pic/composables';
 import type { GalleryImage } from '@readinglist/api';
-import { rewriteMediaUrl } from '@/composables';
+import { mediaUrl } from '@/composables';
 import { PIC_MAX_IMAGE_BYTES, PIC_ACCEPTED_MIME } from '@readinglist/api';
 import dayjs from 'dayjs';
 import { computed, ref, watch } from 'vue';
@@ -196,7 +196,7 @@ const onConfirm = async () => {
       id: newPictureId(),
       uploadedAt: dayjs().toISOString(),
       rawUrl: url,
-      url: rewriteMediaUrl(url),
+      url: mediaUrl(url),
       description: uploadDescription.value || '',
     };
 

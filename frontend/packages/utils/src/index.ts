@@ -16,7 +16,7 @@ export { getCssVar, playThemeTransition } from './themeTransition';
 export type { ThemeMode } from './themeTransition';
 export { renderMarkdown } from './markdown';
 export { formatDate } from './formatdate';
-export { useOrigin, rewriteMediaUrl, mediaUrl } from './origin';
+export { useOrigin, rewriteMediaUrl, mediaUrl, mediaPath } from './origin';
 export type { OriginConfig } from './origin';
 export { WebSocketManager } from './websocket';
 export type { WebSocketManagerOptions } from './websocket';

@@ -1,1 +1,1 @@
-export { useOrigin, rewriteMediaUrl, mediaUrl } from '@readinglist/utils';
+export { useOrigin, rewriteMediaUrl, mediaUrl, mediaPath } from '@readinglist/utils';

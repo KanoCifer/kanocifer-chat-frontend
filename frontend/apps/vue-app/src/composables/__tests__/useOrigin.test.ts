@@ -44,14 +44,20 @@ describe('mediaUrl', () => {
     expect(mediaUrl('')).toBe('');
   });
 
-  it('存储相对路径补上 media 前缀', () => {
+  it('存储相对路径补一层 media 前缀', () => {
     expect(mediaUrl('gallery/19/abc.jpg')).toBe(
       `${API_ORIGIN}/v3/media/gallery/19/abc.jpg`,
     );
   });
 
-  it('绝对 URL 原样返回', () => {
+  it('叠层 media 前缀收敛成一层', () => {
+    expect(mediaUrl('v3/media/v3/media/gallery/1/abc.jpg')).toBe(
+      `${API_ORIGIN}/v3/media/gallery/1/abc.jpg`,
+    );
+  });
+
+  it('绝对 URL 归一到 media 路由', () => {
     const url = 'https://api.kanocifer.chat/v3/media/gallery/19/abc.jpg';
-    expect(mediaUrl(url)).toBe(url);
+    expect(mediaUrl(url)).toBe(`${API_ORIGIN}/v3/media/gallery/19/abc.jpg`);
   });
 });

@@ -5,7 +5,7 @@ import {
   type UpdateImagePayload,
 } from '@readinglist/api';
 import { useNotificationStore } from '@/stores';
-import { rewriteMediaUrl } from '@/composables';
+import { mediaUrl } from '@/composables';
 import dayjs from 'dayjs';
 import { v4 } from 'uuid';
 import { ref } from 'vue';
@@ -22,11 +22,11 @@ export const useGallery = () => {
       images.value = response.images.map((img) => ({
         ...img,
         rawUrl: img.url,
-        url: rewriteMediaUrl(img.url),
+        url: mediaUrl(img.url),
         ...(img.thumbnailUrl && {
-          thumbnailUrl: rewriteMediaUrl(img.thumbnailUrl),
+          thumbnailUrl: mediaUrl(img.thumbnailUrl),
         }),
-        ...(img.mediumUrl && { mediumUrl: rewriteMediaUrl(img.mediumUrl) }),
+        ...(img.mediumUrl && { mediumUrl: mediaUrl(img.mediumUrl) }),
       }));
     } catch {
       useNotificationStore().error('获取照片墙数据失败');

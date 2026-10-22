@@ -14,6 +14,7 @@
  */
 import SpotMiniMap from '@/features/fishing/components/SpotMiniMap.vue';
 import { useSpotEditor } from '@/features/fishing/composables';
+import { mediaUrl } from '@/composables';
 import type { CreateFishingSpotPayload } from '@readinglist/types';
 import {
   FISHING_SPOT_KINDS,
@@ -460,7 +461,11 @@ watch(
                   :key="p.id"
                   class="group bg-surface relative aspect-square overflow-hidden rounded-xl"
                 >
-                  <img :src="p.url" alt="" class="h-full w-full object-cover" />
+                  <img
+                    :src="mediaUrl(p.url)"
+                    alt=""
+                    class="h-full w-full object-cover"
+                  />
                   <button
                     type="button"
                     class="bg-page/80 text-ink hover:bg-page absolute top-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full opacity-0 shadow-sm backdrop-blur-md transition-opacity group-hover:opacity-100"

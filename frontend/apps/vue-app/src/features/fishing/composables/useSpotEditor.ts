@@ -24,6 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 
 import { useUpload } from '@/features/upload/composables';
+import { mediaPath } from '@/composables';
 import type {
   CreateFishingSpotPayload,
   SpotEditorDraft,
@@ -344,7 +345,7 @@ export function useSpotEditor(
         rating: draft.value.rating,
         kind: draft.value.kind ?? 'lake',
         location: draft.value.coordinate as [number, number],
-        images: pictures.value.map((p) => p.url),
+        images: pictures.value.map((p) => mediaPath(p.url)),
       };
       return payload;
     }
@@ -359,7 +360,7 @@ export function useSpotEditor(
       tags: tagsArr,
       rating: draft.value.rating,
       kind: draft.value.kind ?? undefined,
-      images: pictures.value.map((p) => p.url),
+      images: pictures.value.map((p) => mediaPath(p.url)),
     };
     return payload;
   }

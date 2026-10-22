@@ -3,7 +3,7 @@ import {
   type Picture,
   type UpdateImagePayload,
 } from '@/features/pic/api/galleryService';
-import { rewriteMediaUrl } from '@readinglist/utils';
+import { mediaUrl } from '@readinglist/utils';
 import {
   PIC_MAX_IMAGE_BYTES,
   PIC_ACCEPTED_MIME,
@@ -95,11 +95,11 @@ export default function PicGalleryView() {
         data.images.map((img) => ({
           ...img,
           rawUrl: img.url,
-          url: rewriteMediaUrl(img.url),
+          url: mediaUrl(img.url),
           ...(img.thumbnailUrl && {
-            thumbnailUrl: rewriteMediaUrl(img.thumbnailUrl),
+            thumbnailUrl: mediaUrl(img.thumbnailUrl),
           }),
-          ...(img.mediumUrl && { mediumUrl: rewriteMediaUrl(img.mediumUrl) }),
+          ...(img.mediumUrl && { mediumUrl: mediaUrl(img.mediumUrl) }),
         })),
       );
     } catch {
@@ -262,7 +262,7 @@ export default function PicGalleryView() {
         id: createPictureId(),
         uploadedAt: dayjs().toISOString(),
         rawUrl: uploadedUrl,
-        url: rewriteMediaUrl(uploadedUrl),
+        url: mediaUrl(uploadedUrl),
         description: uploadDescription.trim(),
       };
       const nextImages = [...images, newImage];

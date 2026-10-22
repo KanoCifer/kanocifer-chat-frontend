@@ -28,7 +28,7 @@ import type {
 } from '@readinglist/types';
 import { SPOT_MAX_PICTURES } from '@readinglist/types';
 import { fishingSpotsGateway } from '@readinglist/api';
-import { mediaUrl } from '@/composables';
+import { mediaPath, mediaUrl } from '@/composables';
 import { UploadDropzone, UploadProgress } from '@/features/upload/components';
 import {
   ImageOff,
@@ -176,7 +176,7 @@ async function saveEdit(): Promise<void> {
         ...spot.value!,
         ...payload,
         tags: tagsArr ?? [],
-        images: pictures.value.map((p) => p.url),
+        images: pictures.value.map((p) => mediaPath(p.url)),
         updated_at: new Date().toISOString(),
       },
     };

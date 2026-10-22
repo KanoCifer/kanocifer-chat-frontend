@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/features/auth';
 import { useVisitorCountStore } from '@/features/visitor';
+import { mediaUrl } from '@readinglist/utils';
 import { motion } from 'framer-motion';
 import { BasicFooter } from './BasicFooter';
 import { SettingModal } from './SettingMoal';
@@ -148,11 +149,10 @@ export const BentoNavSidebar: React.FC = () => {
   const currentUserName = auth.isAuthenticated
     ? auth.user?.name || '用户'
     : '游客';
+  // photo 是后端存的相对路径(pics/19/xxx.jpg)——补上 API 域的 media 路由前缀。
   const avatarUrl =
     auth.isAuthenticated && auth.user?.photo
-      ? auth.user.photo.startsWith('http')
-        ? auth.user.photo
-        : `/v3/media/${auth.user.photo}`
+      ? mediaUrl(auth.user.photo)
       : '/images/about.webp';
 
   useEffect(() => {

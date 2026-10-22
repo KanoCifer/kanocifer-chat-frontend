@@ -584,7 +584,7 @@ function kindLabel(spot: FishingSpot): string {
                 >
                   <img
                     v-if="selected.owner?.avatar"
-                    :src="selected.owner.avatar"
+                    :src="mediaUrl(selected.owner.avatar)"
                     alt=""
                     class="size-9 shrink-0 rounded-full object-cover"
                   />

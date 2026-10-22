@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { authGateway, useProfileForm } from '@/features/auth';
 import { useAuthStore } from '@/features/auth';
+import { mediaUrl } from '@/composables';
 import { useUpload } from '@/features/upload';
 import { AuthLayout } from './components';
 import { FieldError, IconCloud } from '@/components';
@@ -50,11 +51,9 @@ const {
 const { upload: uploadAvatar } = useUpload({ type: 'avatar' });
 
 const avatarUrl = computed(() => {
-  if (authStore.user?.photo?.startsWith('http')) {
-    return authStore.user.photo;
-  }
+  // photo 是后端存的相对路径(pics/19/xxx.jpg)——补上 API 域的 media 路由前缀。
   if (authStore.user?.photo) {
-    return `/v3/media/${authStore.user.photo}`;
+    return mediaUrl(authStore.user.photo);
   }
   return '/v3/media/default.png';
 });

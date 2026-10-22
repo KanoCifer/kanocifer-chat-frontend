@@ -1,6 +1,7 @@
 import apiClient from '@readinglist/api';
 import { useAuthStore } from '@/features/auth';
 import type { ProfileForm } from '@readinglist/types';
+import { mediaUrl } from '@readinglist/utils';
 import { startRegistration } from '@simplewebauthn/browser';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -76,10 +77,9 @@ export default function ProfileSettingView() {
       setHasPasskey(!!auth.user.has_passkey);
       setHasGitHubBound(!!auth.user.github_bound);
 
-      if (auth.user.photo?.startsWith('http')) {
-        setAvatarUrl(auth.user.photo);
-      } else if (auth.user.photo) {
-        setAvatarUrl(`/v3/media/${auth.user.photo}`);
+      // photo 是后端存的相对路径(pics/19/xxx.jpg)——补上 API 域的 media 路由前缀。
+      if (auth.user.photo) {
+        setAvatarUrl(mediaUrl(auth.user.photo));
       }
     }
   }, [auth.user]);

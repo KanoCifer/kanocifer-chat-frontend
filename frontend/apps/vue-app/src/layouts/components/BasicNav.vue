@@ -106,6 +106,7 @@
 <script setup lang="ts">
 import { HoverDropdown } from '@/components';
 import { useAuthStore } from '@/features/auth';
+import { mediaUrl } from '@/composables';
 import {
   BookOpenText,
   ChevronDown,
@@ -335,11 +336,9 @@ onUnmounted(() => {
 // Computed
 const currentUserName = computed(() => auth.user?.name || '未登录');
 const avatarUrl = computed(() => {
-  if (auth.user?.photo?.startsWith('http')) {
-    return auth.user.photo;
-  }
+  // photo 是后端存的相对路径(pics/19/xxx.jpg)——补上 API 域的 media 路由前缀。
   if (auth.user?.photo) {
-    return `/v3/media/${auth.user.photo}`;
+    return mediaUrl(auth.user.photo);
   }
   return '/logo/logo.png';
 });

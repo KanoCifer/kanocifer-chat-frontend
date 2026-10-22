@@ -75,6 +75,7 @@
 import { DropdownTransition } from '@/components';
 import { ChevronDownIcon } from '@/components';
 import { useAuthStore } from '@/features/auth';
+import { mediaUrl } from '@/composables';
 import type { Component } from 'vue';
 import { computed, onUnmounted, ref } from 'vue';
 
@@ -138,11 +139,9 @@ const handleItemClick = (item: DropdownItem) => {
 };
 
 const avatarUrl = computed(() => {
-  if (auth.user?.photo?.startsWith('http')) {
-    return auth.user.photo;
-  }
+  // photo 是后端存的相对路径(pics/19/xxx.jpg)——补上 API 域的 media 路由前缀。
   if (auth.user?.photo) {
-    return `/v3/media/${auth.user.photo}`;
+    return mediaUrl(auth.user.photo);
   }
   return '/v3/media/default.png';
 });

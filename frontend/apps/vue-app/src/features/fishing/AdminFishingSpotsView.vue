@@ -39,6 +39,7 @@ import {
   X,
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 /** 状态筛选 —— '' 表示全部状态。 */
 type StatusFilter = FishingSpotStatus | '';
@@ -51,6 +52,7 @@ const STATUS_TABS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
 ];
 
 const notifier = useNotificationStore();
+const route = useRoute();
 
 const statusFilter = ref<StatusFilter>('pending');
 const keyword = ref('');
@@ -61,6 +63,14 @@ const page = ref(1);
 const pageSize = 20;
 const isLoading = ref(false);
 const loadError = ref<string | null>(null);
+
+/**
+ * 通过 ?spot=<id> 预选进来的那条钓点。
+ *
+ * 从反馈队列跳过来时用：那条钓点未必在当前页（甚至不在当前状态筛选里），
+ * 所以单独取一份，选中态挂在它身上，不受队列翻页影响。
+ */
+const preselectedSpot = ref<FishingSpot | null>(null);
 
 /** 正在提交的审核动作 —— 按住它是为了让按钮进入 loading。 */
 const acting = ref(false);
@@ -81,12 +91,19 @@ async function load(): Promise<void> {
   isLoading.value = true;
   loadError.value = null;
   try {
-    spots.value = await fishingSpotsGateway.listForReview({
+    const list = await fishingSpotsGateway.listForReview({
       status: statusFilter.value || undefined,
       keyword: keyword.value.trim() || undefined,
       page: page.value,
       page_size: pageSize,
     });
+    spots.value = list;
+    // 预选的那条也在队列里时，队列里的版本更新 —— 跟着换。
+    const preselectedId = preselectedSpot.value?.id;
+    if (preselectedId) {
+      const fresh = list.find((spot) => spot.id === preselectedId);
+      if (fresh) preselectedSpot.value = fresh;
+    }
   } catch (error) {
     loadError.value =
       error instanceof Error ? error.message : '加载失败，请稍后重试';
@@ -95,19 +112,29 @@ async function load(): Promise<void> {
   }
 }
 
-const selected = computed(
-  () => spots.value.find((spot) => spot.id === selectedId.value) ?? null,
-);
+const selected = computed(() => {
+  const fromList = spots.value.find((spot) => spot.id === selectedId.value);
+  if (fromList) return fromList;
+  // 预选的钓点可能不在当前页 —— 详情区照样给它看。
+  if (preselectedSpot.value?.id === selectedId.value) {
+    return preselectedSpot.value;
+  }
+  return null;
+});
 
 /** 队列永远有落点：当前页换了内容后，选中项没了就落到第一条。 */
 watch(
   spots,
   (list) => {
+    const isPreselected = preselectedSpot.value?.id === selectedId.value;
     if (!list.length) {
+      // 预选的钓点不在这一页里 —— 别把选中态清掉。
+      if (isPreselected) return;
       selectedId.value = null;
       return;
     }
     if (!list.some((spot) => spot.id === selectedId.value)) {
+      if (isPreselected) return;
       selectedId.value = list[0].id;
     }
   },
@@ -210,6 +237,10 @@ function startEdit(): void {
 function onSaved(updated: FishingSpot): void {
   const index = spots.value.findIndex((s) => s.id === updated.id);
   if (index >= 0) spots.value[index] = { ...spots.value[index], ...updated };
+  // 预选的那条可能不在队列里 —— 改完得同步到它自己那份。
+  if (preselectedSpot.value?.id === updated.id) {
+    preselectedSpot.value = { ...preselectedSpot.value, ...updated };
+  }
   mode.value = 'view';
 }
 
@@ -241,8 +272,20 @@ function onKeydown(event: KeyboardEvent): void {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', onKeydown);
+  // 从反馈队列点「去钓点审核」跳过来时带着 ?spot=<id> —— 直接落到那一条。
+  const spotId = typeof route.query.spot === 'string' ? route.query.spot : '';
+  if (spotId) {
+    // 不按状态筛 —— 那条钓点未必是待审的，筛掉了就预选不上。
+    statusFilter.value = '';
+    try {
+      preselectedSpot.value = await fishingSpotsGateway.getByID(spotId);
+      selectedId.value = spotId;
+    } catch {
+      // 取不到就退回普通队列，不在这一步报错 —— 队列本身还能用。
+    }
+  }
   void load();
 });
 

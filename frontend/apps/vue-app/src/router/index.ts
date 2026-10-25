@@ -502,6 +502,20 @@ const router = createRouter({
       },
     },
     {
+      // 管理员钓点纠错反馈队列 — 用户报的问题在这里排队、改钓点去钓点审核页。
+      path: '/admin/fishing-feedbacks',
+      name: 'admin-fishing-feedbacks',
+      component: () => import('@/features/fishing/AdminSpotFeedbacksView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: "钓点纠错反馈 - Kuroome's Blog",
+        description: '处理用户提交的钓点纠错反馈：采纳、处理或不属实',
+        keywords: '钓点,纠错,反馈,管理员,fishing,admin',
+        transition: 'fade',
+      },
+    },
+    {
       // 通配符匹配所有未定义的路径
       path: '/:pathMatch(.*)*',
       name: 'NotFound',

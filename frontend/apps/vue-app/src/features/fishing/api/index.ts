@@ -6,11 +6,20 @@ export type {
   FishingSpotGateway,
   DeleteFishingSpotOptions,
 } from '@readinglist/api';
+export { fishingFeedbackGateway } from '@readinglist/api';
+export type { FishingFeedbackGateway } from '@readinglist/api';
 
 // 钓点 / 天气领域类型 —— 真源在 @readinglist/types
 export type {
   CreateFishingSpotPayload,
   FishingSpot,
+  FishingSpotFeedback,
+  FishingSpotFeedbackActionStatus,
+  FishingSpotFeedbackAdminListQuery,
+  FishingSpotFeedbackReporter,
+  FishingSpotFeedbackStatus,
+  FishingSpotFeedbackStatusPayload,
+  FishingSpotFeedbackType,
   TideResponse,
   UpdateFishingSpotPayload,
   WeatherDay,

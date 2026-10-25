@@ -73,6 +73,8 @@ export type {
   FishingSpotGateway,
   DeleteFishingSpotOptions,
 } from './gateways/fishingSpot';
+export { fishingFeedbackGateway } from './gateways/fishingFeedback';
+export type { FishingFeedbackGateway } from './gateways/fishingFeedback';
 
 export { fishingGateway as mapGateway } from './gateways/fishing';
 export type { FishingGateway as MapGateway } from './gateways/fishing';

@@ -280,6 +280,148 @@ export interface FishingSpotAdminListQuery {
 export type SpotDetail = Omit<FishingSpot, "location">;
 
 // ---------------------------------------------------------------------------
+// 钓点纠错反馈
+//
+// 字段名与后端 `dto.FishingSpotFeedback*` 逐字对齐（snake_case）——
+// 网关层不做改名，中间的 UI 自己适配。
+// ---------------------------------------------------------------------------
+
+/**
+ * 反馈类型 —— 与后端 `dto.FishingSpotFeedbackRequest.Type` 的 oneof 校验同集合。
+ *
+ * 五值封闭：location_wrong（位置不对）/ closed（已封闭）/ fee_wrong（收费变更）/
+ * info_stale（信息有误）/ other（其他）。新增类型要同步后端枚举。
+ */
+export type FishingSpotFeedbackType =
+  | "location_wrong"
+  | "closed"
+  | "fee_wrong"
+  | "info_stale"
+  | "other";
+
+/** 反馈类型 label —— UI 层唯一文案来源，勿在组件内内联硬编码 */
+export const FISHING_SPOT_FEEDBACK_TYPE_LABELS: Readonly<Record<FishingSpotFeedbackType, string>> =
+  {
+    location_wrong: "位置不对",
+    closed: "已封闭",
+    fee_wrong: "收费变更",
+    info_stale: "信息有误",
+    other: "其他",
+  };
+
+/** 处理状态 —— 与后端 `model.FishingSpotFeedbackStatus` 同集合 */
+export type FishingSpotFeedbackStatus = "pending" | "accepted" | "resolved" | "dismissed";
+
+/** 处理状态 label —— 措辞按「管理员的动作」定 */
+export const FISHING_SPOT_FEEDBACK_STATUS_LABELS: Readonly<
+  Record<FishingSpotFeedbackStatus, string>
+> = {
+  pending: "待处理",
+  accepted: "已采纳",
+  resolved: "已处理",
+  dismissed: "不属实",
+};
+
+/**
+ * 管理员可设的目标状态 —— 不含 pending。
+ *
+ * 后端 `dto.FishingSpotFeedbackReviewRequest.Status` 的 oneof 就是这三个：
+ * pending 不能作为目标状态（已处理的不能退回待处理）。
+ */
+export type FishingSpotFeedbackActionStatus = "accepted" | "resolved" | "dismissed";
+
+/**
+ * 允许的状态流转 —— 与后端 service 的 feedbackStatusTransitions 同表。
+ *
+ * 前端照这张表出按钮：给了后端不接受的流转，用户就会撞上 400
+ * （invalid_feedback_transition）。终态是空数组 —— 终态条目不再出处理按钮。
+ */
+export const FISHING_SPOT_FEEDBACK_TRANSITIONS: Readonly<
+  Record<FishingSpotFeedbackStatus, readonly FishingSpotFeedbackActionStatus[]>
+> = {
+  pending: ["accepted", "resolved", "dismissed"],
+  accepted: ["resolved", "dismissed"],
+  resolved: [],
+  dismissed: [],
+};
+
+/** 某状态之后还能走到哪些状态 —— 终态返回空数组 */
+export function fishingSpotFeedbackNextStatuses(
+  status: FishingSpotFeedbackStatus,
+): readonly FishingSpotFeedbackActionStatus[] {
+  return FISHING_SPOT_FEEDBACK_TRANSITIONS[status] ?? [];
+}
+
+/** 反馈提交人快照 —— 昵称与头像都是写入时的快照 */
+export interface FishingSpotFeedbackReporter {
+  user_id: number;
+  name: string;
+  /** 头像，omitempty —— 没设过头像时整个字段不发 */
+  avatar?: string;
+}
+
+/**
+ * 一条钓点纠错反馈。
+ *
+ * ⚠️ **反馈不公开**：后端没有面向普通用户的读取端点，也没有「提交者查自己反馈」
+ * 的端点。这个类型只出现在管理后台队列与「提交成功」那一次响应里。
+ */
+export interface FishingSpotFeedback {
+  id: string;
+  spot_id: string;
+  spot_name: string;
+  type: FishingSpotFeedbackType;
+  description: string;
+  /** 配图 —— 服务端相对路径（如 feedback/12/xxx.jpg），渲染前过 mediaUrl */
+  images: string[];
+  /** 修正后的收费情况 —— 只有 fee_wrong 才有值 */
+  corrected_fee_type?: FishingSpotFeeType;
+  /** 修正后的收费金额（元）—— 只有 corrected_fee_type 为 paid 时才有意义 */
+  corrected_fee_amount?: number | null;
+  /** 建议的新名称 —— 只有 info_stale 才有值 */
+  corrected_name?: string;
+  /** 建议的新位置 —— GCJ-02，经度在前。只有 location_wrong 才有值 */
+  corrected_longitude?: number | null;
+  corrected_latitude?: number | null;
+  /** 处理状态 */
+  status: FishingSpotFeedbackStatus;
+  /** 管理员的处理备注 */
+  review_note: string;
+  /** 提交人快照 */
+  reporter?: FishingSpotFeedbackReporter;
+  created_at: string;
+  updated_at: string;
+  /** 处理时间 —— 没处理过时为 null */
+  reviewed_at?: string | null;
+}
+
+/** 管理后台反馈队列的查询参数 —— 对应 GET /v3/fish/feedback/admin */
+export interface FishingSpotFeedbackAdminListQuery {
+  /** pending / accepted / resolved / dismissed；省略 = 全部状态 */
+  status?: FishingSpotFeedbackStatus;
+  /** 反馈类型过滤；省略 = 全部类型 */
+  type?: FishingSpotFeedbackType;
+  /** 钓点名或反馈正文的模糊匹配 */
+  keyword?: string;
+  /** 页码，从 1 起 */
+  page?: number;
+  /** 每页条数，缺省 50，上限 200 */
+  page_size?: number;
+}
+
+/**
+ * 处理反馈的载荷 —— PUT /v3/fish/feedback/:id/status。
+ *
+ * `note` 在 dismissed 时必填（后端会拦，返 400）：没有理由的不采纳
+ * 等于让管理员自己猜当初为什么否掉。
+ */
+export interface FishingSpotFeedbackStatusPayload {
+  status: FishingSpotFeedbackActionStatus;
+  /** 处理备注。dismissed 时必填，其余可留空 */
+  note?: string;
+}
+
+// ---------------------------------------------------------------------------
 // 钓点编辑器(view 层契约，与 useSpotEditor seam 配套)
 // ---------------------------------------------------------------------------
 
